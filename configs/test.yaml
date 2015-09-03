@@ -1,0 +1,12 @@
+name: default
+
+sounds:
+    - name: Ebin
+      position: 0
+      type: simple
+      file: default/whip.wav
+
+    - name: bebin
+      position: 1
+      type: simple
+      file: battlecruiser/Good day.wav
