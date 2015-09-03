@@ -1,12 +1,64 @@
 name: default
+    #   position: 0
+    #   type: simple
+    #   file: default/whip.wav
+    #
+    # - name: bebin
+    #   position: 1
+    #   type: simple
+    #   file: battlecruiser/Good day.wav
 
 sounds:
-    - name: Ebin
+    - name: nope
       position: 0
       type: simple
-      file: default/whip.wav
+      file: default/ba-dum-tish.wav
 
-    - name: bebin
+    - name: mr.bison yes
       position: 1
       type: simple
-      file: battlecruiser/Good day.wav
+      file: default/yesyes.wav
+    - name: Ba Dum Tss!
+      position: 2
+      type: simple
+      file: default/ba-dum-tish.wav
+
+    - name: crickets
+      position: 3
+      type: simple
+      file: default/crickets.wav
+
+    - name: wind
+      position: 4
+      type: simple
+      file: default/wind.wav
+    - name: sad trombone
+      position: 5
+      type: simple
+      file: default/trombone.wav
+    - name: whiplash
+      position: 6
+      type: random
+      files: [default/whip2.wav, default/whip3.wav, default/whip4.wav]
+    - name: finish him
+      position: 7
+      type: simple
+      file: default/finishim.wav
+
+    - name: DAAAAAAYUM
+      position: 8
+      type: list
+      files: [default/dayum1.wav, default/dayum2.wav, default/dayum3.wav]
+    - name: (Vader) NOOOO!
+      position: 9
+      type: simple
+      file: default/noooooooo.wav
+    - name: MAXIMUM FAILURE
+      position: 10
+      type: simple
+      file: default/maximum_failure.wav
+        
+    - name: dundunduun
+      position: 11
+      type: simple
+      file: default/dundundun.wav
