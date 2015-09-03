@@ -8,10 +8,10 @@ def init_sdl():
     if initialized:
         return True
 
-    sdl2.ext.init()
     sdl2.SDL_Init(0)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_AUDIO)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
+    sdl2.SDL_GameControllerAddMappingsFromFile(b"gamecontrollerdb.txt")
 
     result = sdlmixer.Mix_OpenAudio(sdlmixer.MIX_DEFAULT_FREQUENCY,
                                     sdlmixer.MIX_DEFAULT_FORMAT,
