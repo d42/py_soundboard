@@ -108,27 +108,23 @@ class SimpleSound(Sound):
         super().__init__([sound], mixer)
 
 
+@decorator_register_sound
 class RandomSound(Sound):
     simple_name = 'random'
     config_sounds_attribute = 'files'
 
-    def next_sound(self):
-        self.chunk = random.choice(self.sounds)
+    def next_sound(self, chunks, current_position):
+        return random.choice(chunks)
 
 
+@decorator_register_sound
 class ListSound(Sound):
     simple_name = 'list'
     config_sounds_attribute = 'files'
 
-    def create(self):
-        self.cycle = cycle(self.sounds)
-        self.sound = next(self.cycle)
-
-    def on_end(self):
-        self.cycle = cycle(self.sounds)
-
-    def next_sound(self):
-        self.sound = next(self.cycle)
+    def next_sound(self, chunks, current_position):
+        size = len(chunks)
+        return chunks[(current_position + 1) % size]
 
 
 class VoxSound(Sound):
