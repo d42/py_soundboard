@@ -104,7 +104,7 @@ class RawSDLJoystick(InputInterface, BaseRawJoystick):
 
 class RawEVDEVJoystick(InputInterface, BaseRawJoystick):
     def __init__(self, device_path, mapping=None, offset=0):
-        self.mapping = mapping
+        self._mapping = mapping
         self._offset = offset
         self.events = []
         self.joystick = evdev.InputDevice(device_path)
