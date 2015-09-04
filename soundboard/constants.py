@@ -16,6 +16,8 @@ physical_mapping = dict(zip([
 
 buttons_count = len(physical_mapping)
 
+evdev_button_offset = 304
+
 top_left = {0, 1, 4}
 top_right = {2, 3, 7}
 bottom_left = {4, 8, 9}

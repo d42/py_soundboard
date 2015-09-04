@@ -7,13 +7,14 @@ from time import sleep
 import sdl2
 import sdl2.ext
 import six
+import evdev
 
-from soundboard.utils import init_sdl
 from soundboard import constants
+from soundboard.utils import init_sdl
 from collections import namedtuple
 
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger('controls')
 
 
@@ -31,17 +32,7 @@ class InputInterface:
         self.callback = callback
 
 
-class RawSDLJoystick(InputInterface):
-    def __init__(self, joystick_id):
-        sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b"1")
-
-        self.events = []
-        init_sdl()
-
-        self.joystick = sdl2.SDL_JoystickOpen(joystick_id)
-        if not self.joystick:
-            raise ControllerException("Joystick %d could not be initialized" %
-                                      joystick_id)
+class BaseRawJoystick:
 
     def get_buttons(self):
         events = self.events
@@ -53,35 +44,106 @@ class RawSDLJoystick(InputInterface):
             sleep(0.1)
             self._pump_events()
 
-    def _pump_events(self):
+    def pump(self, events):
+        for (button, type) in events:
+            if type not in ('UP', 'DOWN', 'HOLD'):
+                raise Exception("Unknown event type %s" % type)
 
-        joystick_events = {sdl2.SDL_JOYBUTTONUP: 'UP',
-                           sdl2.SDL_JOYBUTTONDOWN: 'DOWN'}
-
-        def pump(event):
-            type = joystick_events.get(event.type, None)
-            if not type:
-                return
-            button = self._translate(event.jbutton.button)
-            t = event_tuple(button, type == 'DOWN')
+            t = event_tuple(button, type)
             logger.info("event %s", t)
             self.events.append(t)
 
-        for e in sdl2.ext.get_events():
-            pump(e)
+    def _translate(self, physical_button):
+        if self._offset:
+            physical_button -= self._offset
 
+        if self._mapping:
+            return self._mapping[physical_button]
+        else:
+            return physical_button
+
+
+class RawSDLJoystick(InputInterface, BaseRawJoystick):
+    _mapping = None
+
+    def __init__(self, joystick_id, mapping=None, offset=0):
+        sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b"1")
+
+        self._mapping = mapping
+        self._offset = offset
+
+        self.events = []
+        self.previous_events = []
+        init_sdl()
+
+        self.joystick = sdl2.SDL_JoystickOpen(joystick_id)
+        if not self.joystick:
+            raise ControllerException("Joystick %d could not be initialized" %
+                                      joystick_id)
+
+    def _pump_events(self):
+
+        DOWN = sdl2.SDL_JOYBUTTONDOWN
+        UP = sdl2.SDL_JOYBUTTONUP
+
+        types = {DOWN: 'DOWN', UP: 'UP'}
+
+        events = []
+        for event in sdl2.ext.get_events():
+            if event.type not in types: continue
+
+            button = self._translate(event.button.jbutton)
+            type = ('HOLD' if type == DOWN and button in self.previous_events
+                    else types[type])
+            events.append((button, type))
+
+        self.pump(events)
         return bool(self.events)
 
-    def _translate(self, physical_button):
-        button_id = constants.physical_mapping[physical_button]
-        return button_id
+
+class RawEVDEVJoystick(InputInterface, BaseRawJoystick):
+    def __init__(self, device_path, mapping=None, offset=0):
+        self.mapping = mapping
+        self._offset = offset
+        self.events = []
+        self.joystick = evdev.InputDevice(device_path)
+
+    def _pump_events(self):
+
+        events = []
+        while True:
+            event = self.joystick.read_one()
+            if not event: break
+            if event.type != evdev.ecodes.EV_KEY:
+                continue
+
+            button_off = getattr(event, 'scancode', event.code)
+            button = button_off # - constants.evdev_button_offset
+
+            if hasattr(event, 'value'):
+                type = {0: 'UP', 1: 'DOWN', 2: 'HOLD'}[event.value]
+            else:
+                if event.key_down:
+                    type = 'DOWN'
+                elif event.key_up:
+                    type = 'UP'
+                else:
+                    raise Exception("wtf bbq %s", event)
+
+            events.append((button, type))
+
+            self.pump(events)
 
 
 class Joystick(InputInterface):
 
-    def __init__(self, joystick_id=0, buffer_msec=20):
+    def __init__(self, joystick_id, buffer_msec=20, mapping=None, offset=0):
         self.buffer_msec = buffer_msec/100
-        self.raw_joystick = RawSDLJoystick(joystick_id)
+
+        self.raw_joystick = RawEVDEVJoystick(joystick_id,
+                                             mapping=mapping,
+                                             offset=offset)
+
         t = threading.Thread(target=self._poll_events)
         t.start()
 

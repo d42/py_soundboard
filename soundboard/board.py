@@ -29,11 +29,15 @@ class Board(Thread):
 
     def on_buttons_update(self, buttons):
         """:type buttons: list"""
-        for (button, pushed_down) in buttons:
-            if pushed_down:
+        for (button, type) in buttons:
+            if type == 'DOWN':
                 self._state.add(button)
-            else:
+            elif type == 'UP':
                 self._state.discard(button)
+            elif type == 'HOLD':
+                pass
+            else:
+                raise Exception("unknown button type %s" % type)
 
     def play_sounds(self):
 
