@@ -46,6 +46,7 @@ class BaseRawJoystick:
 
     def pump(self, events):
         for (button, type) in events:
+            button = self._translate(button)
             if type not in ('UP', 'DOWN', 'HOLD'):
                 raise Exception("Unknown event type %s" % type)
 
@@ -92,7 +93,7 @@ class RawSDLJoystick(InputInterface, BaseRawJoystick):
         for event in sdl2.ext.get_events():
             if event.type not in types: continue
 
-            button = self._translate(event.button.jbutton)
+            button = event.button.jbutton
             type = ('HOLD' if type == DOWN and button in self.previous_events
                     else types[type])
             events.append((button, type))
