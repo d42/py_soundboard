@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 from soundboard.board import Board
 from soundboard.controls import Joystick
