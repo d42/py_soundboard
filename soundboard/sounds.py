@@ -268,16 +268,16 @@ class SoundSet(object):
         if not sound:
             logging.error("ENOSOUND")
             return
-        if time() < self.busy_time:
-            logging.error("ETOOEARLY")
-            return
+        # if time() < self.busy_time:
+        #     logging.error("ETOOEARLY")
+        #     return
+        #
+        # # c, s = self.timeout_settings
+        # # self.busy_time = (time() + c) + (sound.duration * s)
+        # self.busy_time = time() + sound.duration * 0.5
 
-        # c, s = self.timeout_settings
-        # self.busy_time = (time() + c) + (sound.duration * s)
-        self.busy_time = time() + sound.duration
-
-        if sound not in self.running_sounds:
-            sound.on_start()
-            self.running_sounds.add(sound)
-        else:
-            sound.play()
+        # if sound not in self.running_sounds:
+        #     sound.on_start()
+        #     self.running_sounds.add(sound)
+        # else:
+        sound.play()
