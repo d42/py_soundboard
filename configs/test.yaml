@@ -1,18 +1,11 @@
 name: default
-    #   position: 0
-    #   type: simple
-    #   file: default/whip.wav
-    #
-    # - name: bebin
-    #   position: 1
-    #   type: simple
-    #   file: battlecruiser/Good day.wav
-
+delay multiplier: 0
+delay constant: 0
 sounds:
     - name: nope
       position: 0
       type: simple
-      file: default/ba-dum-tish.wav
+      file: default/nope.wav
 
     - name: mr.bison yes
       position: 1
