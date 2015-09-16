@@ -1,3 +1,4 @@
+# PLS NO REMOVE :_DDDD
 name: test
 delay multiplier: 0
 delay constant: 0
@@ -6,4 +7,19 @@ sounds:
     - name: test_simple
       position: 0
       type: simple
-      file: test_simple
+      file: test/test.wav
+
+    - name: test_random
+      position: 1
+      type: random
+      files: [test/test.wav, test/test.wav]
+
+    - name: test_list
+      position: 2
+      type: list
+      files: [test/test.wav, test/test.wav]
+
+    - name: test_vox
+      position: 3
+      type: vox
+      sentence: "test test test"
