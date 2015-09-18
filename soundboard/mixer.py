@@ -50,8 +50,10 @@ class SDLMixer(Thread):
 
 class NOPMixer(SDLMixer):
 
-    def play(self, sound):
-        pass
+    def play(self, chunk):
+        if sdlmixer.Mix_PlayChannel(-1, chunk, 0) == -1:
+            raise Exception("Could not play chunk")
+        sdlmixer.Mix_HaltChannel(-1)
 
 
 class RawSound():
