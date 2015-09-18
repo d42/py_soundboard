@@ -149,12 +149,6 @@ class VoxSound(Sound):
 
 class SoundSet(object):
 
-    # sound_types = {
-    #     'simple': SimpleSound,
-    #     'vox': VoxSound,
-    #     'weather': WeatherSound,
-    #     'random': RandomSound
-    # }
 
     def __init__(self, name, mixer=SDLMixer):
 
