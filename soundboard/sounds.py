@@ -59,15 +59,11 @@ class Sound(SoundInterface):
     def __init__(self, paths, mixer):
         """:type mixer: SDLMixer"""
         self.mixer = mixer
-        self.paths = paths
-        self._create()
+        self.create(data)
 
-    def _create(self):
-        self.chunks = [self.mixer.read(p) for p in self.create(self.paths)]
+    def create(self, paths):
+        self.chunks = [self.mixer.read(p) for p in paths]
         self.chunk = self.chunks[0]
-
-    def create(self, config_values):
-        return config_values
 
     def _next_sound(self):
         self.chunk = self.next_sound(self.chunks,
@@ -106,8 +102,9 @@ class SimpleSound(Sound):
     simple_name = 'simple'
     config_sounds_attribute = 'file'
 
-    def __init__(self, sound, mixer):
-        super().__init__([sound], mixer)
+    def create(self, path):
+        self.chunks = [self.mixer.read(path)]
+        self.chunk = self.chunks[0]
 
 
 @decorator_register_sound
@@ -129,72 +126,18 @@ class ListSound(Sound):
         return chunks[(current_position + 1) % size]
 
 
+@decorator_register_sound
 class VoxSound(Sound):
     simple_name = 'vox'
     config_sounds_attribute = 'sentence'
-    sounds = None
 
     def __init__(self, sentence, mixer):
         paths = voxify(sentence)
-        super(VoxSound).__init__(paths, mixer)
-        self.sentence = sentence
-        self.mixer = mixer
-#
-#     def play(self):
-#         self.sound.play()
-#
-#     @classmethod
-#     def from_config(cls, config):
-#         return cls(config['sentence'])
-#
-#
-# class WeatherSound(Sound):
-#     temperature = 1337
-#
-#     def __init__(self):
-#         pass
-#
-#     def next_sound(self):
-#         pass
-#
-#     def on_end(self):
-#         self.cycle = None
-#
-#     def on_start(self):
-#         t = self.temperature
-#         s = "black mesa topside temperature is %d degrees " % abs(t)
-#         s += ('sub 0' if t < 0 else 'celsius')
-#         self.sound = RawVox(s)
-#
-#     @property
-#     def duration(self):
-#         return sum(v.get_length() for v, p in self.sounds)
-#
-#     @staticmethod
-#     def update_temperature():
-#         logging.info("temperaturatoring :3")
-#         api_url = constants.wea
-#         city_id = constants.city_id
-#         try:
-#             j = json.loads(requests.get(api_url, params={'id': city_id}).text)
-#         except:
-#             pass
-#         else:
-#             WeatherSound.temperature = int(j['main']['temp'] - 273)
-#
-#
-class StartStopSound(Sound):
-    cycle = None
+        self.chunks = [self.mixer.read(p) for p in paths]
 
-    def next_sound(self):
-        if self.cycle is None:
-            self.cycle = cycle(self.sounds[1:-1])
-            self.exit_sound = self.sounds[-1]
-            self.start_sound = self.sounds[0]
-            self.sound, self.path = self.start_sound
-        else:
-            self.sound, self.path = next(self.cycle)
-
+    def play(self):
+        for chunk in self.chunks:
+            self.chunk.play()
     def on_end(self):
         self.sound, self.path = self.exit_sound
         self.play()
