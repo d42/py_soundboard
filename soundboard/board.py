@@ -1,15 +1,12 @@
 import time
 from threading import Thread
 
-# from soundboard import constants
 from soundboard.sounds import SoundSet
-# from soundboard.config import YAMLConfig
 
 
 class Board(Thread):
     def __init__(self):
 
-        # self.joystick = joystick
         self._state = set()
 
         self.sets_combos = {}
