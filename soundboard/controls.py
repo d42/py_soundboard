@@ -9,7 +9,6 @@ import sdl2.ext
 import six
 import evdev
 
-from soundboard import constants
 from soundboard.utils import init_sdl
 from collections import namedtuple
 
@@ -118,8 +117,7 @@ class RawEVDEVJoystick(InputInterface, BaseRawJoystick):
             if event.type != evdev.ecodes.EV_KEY:
                 continue
 
-            button_off = getattr(event, 'scancode', event.code)
-            button = button_off # - constants.evdev_button_offset
+            button = getattr(event, 'scancode', event.code)
 
             if hasattr(event, 'value'):
                 type = {0: 'UP', 1: 'DOWN', 2: 'HOLD'}[event.value]
