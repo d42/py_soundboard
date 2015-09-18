@@ -136,12 +136,13 @@ class RawEVDEVJoystick(InputInterface, BaseRawJoystick):
 
 class Joystick(InputInterface):
 
-    def __init__(self, joystick_id, buffer_msec=20, mapping=None, offset=0):
+    def __init__(self, joystick_id, backend=RawEVDEVJoystick,
+                 buffer_msec=20, mapping=None, offset=0):
         self.buffer_msec = buffer_msec/100
 
-        self.raw_joystick = RawEVDEVJoystick(joystick_id,
-                                             mapping=mapping,
-                                             offset=offset)
+        self.raw_joystick = backend(joystick_id,
+                                    mapping=mapping,
+                                    offset=offset)
 
         t = threading.Thread(target=self._poll_events)
         t.start()
