@@ -137,7 +137,7 @@ class VoxSound(Sound):
 
     def play(self):
         for chunk in self.chunks:
-            self.chunk.play()
+            chunk.play()
     def on_end(self):
         self.sound, self.path = self.exit_sound
         self.play()
