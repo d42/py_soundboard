@@ -5,6 +5,7 @@ import logging
 import abc
 
 from functools import partial, update_wrapper
+from threading import Thread
 
 import six
 import requests
@@ -56,7 +57,7 @@ class SoundInterface():
 
 class Sound(SoundInterface):
 
-    def __init__(self, paths, mixer):
+    def __init__(self, data, mixer):
         """:type mixer: SDLMixer"""
         self.mixer = mixer
         self.create(data)
@@ -131,24 +132,52 @@ class VoxSound(Sound):
     simple_name = 'vox'
     config_sounds_attribute = 'sentence'
 
-    def __init__(self, sentence, mixer):
+    def create(self, sentence):
         paths = voxify(sentence)
         self.chunks = [self.mixer.read(p) for p in paths]
 
     def play(self):
         for chunk in self.chunks:
             chunk.play()
-    def on_end(self):
-        self.sound, self.path = self.exit_sound
-        self.play()
-        self.sound, self.path = self.start_sound
+
+
+@decorator_register_sound
+class WeatherSound(Sound):
+    temperature = 2137
+    simple_name = 'weather'
+    config_sounds_attribute = 'location'
+    base_sentence = 'black mesa topside temperature is %d degrees'
+    api_url = constants.weather_url
+
+    def create(self, location):
+        if location.isdigit():
+            self.params = {'id': int(location), 'units': 'metric'}
+        else:
+            self.params = {'q': location, 'units': 'metric'}
 
     def play(self):
-        self.next_sound()
+        sentence = self.base_sentence % self.temperature
+        if self.temperature < 0:
+            sentence += 'ebin'
+        sound = VoxSound(sentence, mixer=self.mixer)
+        sound.play()
+
+    def update_temperature(self):
+        logging.info("temperaturatoring :3")
+        temperature = self._get_temperature()
+        if temperature is None:
+            logging.warning("Last temperature update failed")
+            return
+        self.temperature = temperature
+
+    def _get_temperature(self):
+        text = requests.get(self.api_url, params=self.params).text
+        j = json.loads(text)
+        temp = j.get('main', {}).get('temp', None)
+        return temp
 
 
 class SoundSet(object):
-
 
     def __init__(self, name, mixer=SDLMixer):
 

@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import pytest
 
 from soundboard import sounds
@@ -9,7 +11,21 @@ def factory():
     return sounds.SoundFactory(NOPMixer)
 
 
-def test_sounds(factory):
+class MockRequest:
+    @property
+    def text(self):
+        return dedent("""
+            {"coord":{"lon":21.01,"lat":52.23},"weather":
+            [{"id":800,"main":"Clear","description":"Sky is Clear","icon":"01n"}],
+            "base":"cmc stations","main":{"temp":21.37,"pressure":1018,"humidity":77,
+            "temp_min":15.56,"temp_max":17.22},"wind":{"speed":1.5,"deg":290},
+            "clouds":{"all":0},"dt":1442600185,"sys":{"type":1,"id":5374,"message":0.008,
+            "country":"PL","sunrise":1442549747,"sunset":1442594587},
+            "id":756135,"name":"Warsaw","cod":200}
+            """)
+
+
+def test_sounds(monkeypatch, factory):
     simple = factory.simple("test/test.wav")
     simple.play()
 
@@ -21,3 +37,8 @@ def test_sounds(factory):
 
     random = factory.random(["test/test.wav", "test/test.wav"])
     random.play()
+
+    monkeypatch.setattr('requests.get', lambda *args, **kwargs: MockRequest())
+    weather = factory.weather("europe,warsaw")
+    weather.update_temperature()
+    assert weather.temperature == 21.37

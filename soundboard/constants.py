@@ -24,4 +24,3 @@ bottom_left = {4, 8, 9}
 bottom_right = {7, 10, 11}
 
 weather_url = 'http://api.openweathermap.org/data/2.5/weather'
-city_id = 756135
