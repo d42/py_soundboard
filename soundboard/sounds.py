@@ -32,6 +32,9 @@ class SoundFactory:
         cls_wrapped = update_wrapper(cls_partial, cls)
         return cls_wrapped
 
+    def __getattr__(self, attr):
+        return self.by_name(attr)
+
 
 def decorator_register_sound(sound):
     SoundFactory.sound_classes[sound.__name__] = sound
