@@ -1,7 +1,8 @@
 from itertools import count
+import os
 
-wav_directory = "sounds/"
-sound_sets_directory = "configs/"
+wav_directory = os.path.expanduser("~/soundboard/files")
+sound_sets_directory = os.path.expanduser("~/soundboard/yaml")
 srs_debugging = False
 
 
