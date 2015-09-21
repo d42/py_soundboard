@@ -71,7 +71,7 @@ class BaseRawJoystick:
             physical_button -= self._offset
 
         if self._mapping:
-            return self.mapping[physical_button]
+            return self._mapping[physical_button]
         else:
             return physical_button
 
