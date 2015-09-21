@@ -8,7 +8,7 @@ from soundboard.constants import physical_mapping
 def main():
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
     b = Board()
-    b.register_sound_set('test')
+    b.register_sound_set('default')
     b.register_joystick(Joystick('/dev/input/event5',
                                  mapping=physical_mapping,
                                  offset=1))
