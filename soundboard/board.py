@@ -2,6 +2,7 @@ import time
 from threading import Thread
 
 from soundboard.sounds import SoundSet
+from soundboard.controls import EventTypes
 
 
 class Board(Thread):
@@ -25,16 +26,11 @@ class Board(Thread):
         self.sets_combos[frozenset(combo)] = sound_set
 
     def on_buttons_update(self, buttons):
-        """:type buttons: list"""
-        for (button, type) in buttons:
-            if type == 'DOWN':
-                self._state.add(button)
-            elif type == 'UP':
-                self._state.discard(button)
-            elif type == 'HOLD':
-                pass
-            else:
-                raise Exception("unknown button type %s" % type)
+        """:type buttons: states_tuple"""
+        pushed, released, held = buttons.pushed, buttons.released, buttons.held
+
+        self._state.update(pushed + held)
+        self._state.difference_update(released)
 
     def play_sounds(self):
 
