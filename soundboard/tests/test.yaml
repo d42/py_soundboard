@@ -1,5 +1,7 @@
 name: Test Board
 directory: test
+delay_constant: 0
+delay_multiplier: 0.5
 sounds:
     - name: whip
       position: 0

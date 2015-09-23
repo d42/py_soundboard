@@ -1,4 +1,7 @@
+import logging
 import yaml
+
+logger = logging.getLogger('config')
 
 
 class YAMLConfig:
@@ -16,6 +19,12 @@ class YAMLConfig:
 
     def _validate(self):
         errors = []
+        if 'delay_constant' not in self._data:
+            logger.warn('delay_constant MISSING, defaulting to %d', self.dc)
+
+        if 'delay_multi' not in self._data:
+            logger.warn('delay_multiplier MISSING, defaulting to %d', self.dm)
+
         if 'name' not in self._data:
             errors.append("name parameter missing")
 
@@ -45,3 +54,10 @@ class YAMLConfig:
     @property
     def name(self):
         return self._data['name']
+
+    @property
+    def delay_const(self):
+        return self._data.getattr('delay_constant', 0)
+
+    def delay_multi(self):
+        return self._data.getattr('delay_multiplier', 1)

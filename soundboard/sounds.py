@@ -228,10 +228,9 @@ class SoundSet(object):
 
     def play(self, buttons):
         if not buttons:
-            raise Exception()
+            return
 
         buttons = frozenset(buttons)
-
         sound = self.sounds.get(buttons, None)
         if not sound:
             logging.error("ENOSOUND")

@@ -18,11 +18,3 @@ def voxify(sentence):
             for w in sentence.split()
     )
     return ["vox/{}.wav".format(w) for w in words]
-
-
-def main():
-    import sys
-    print(' '.join(voxify(' '.join(sys.argv[1:]))))
-
-if __name__ == '__main__':
-    main()

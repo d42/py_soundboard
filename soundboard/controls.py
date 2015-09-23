@@ -28,6 +28,8 @@ class EventTypes(Enum):
     push = 1
     hold = 2
 
+    new_push = 1000
+
     @classmethod
     def from_sdl(cls, sdl_event):
         sdl_event_types = {
@@ -71,7 +73,7 @@ class BaseRawJoystick:
             physical_button -= self._offset
 
         if self._mapping:
-            return self._mapping[physical_button]
+            return self._mapping.get(physical_button, physical_button)
         else:
             return physical_button
 
@@ -124,7 +126,7 @@ class RawEVDEVJoystick(BaseRawJoystick):
     def _pump_one_event(self, evdev_event):
         input_event = getattr(evdev_event, 'event', evdev_event)
         button = input_event.code
-        type = EventTypes(min(input_event.value, 1)) # hack hack hack :3
+        type = EventTypes(min(input_event.value, 1))  # hack hack hack :3
         return event_tuple(button, type)
 
 
@@ -132,12 +134,22 @@ class StubJoystick:
     def __init__(self, device_path, mapping=None, offset=0):
         pass
 
+    def wait(self):
+        return True
+
+    def get_events(self):
+        e1 = event_tuple(4, EventTypes.push)
+        e2 = event_tuple(4, EventTypes.release)
+        return [e1, e2]
+
 
 class Joystick():
     callback = None
 
     def __init__(self, joystick_id, backend=RawEVDEVJoystick,
                  buffer_msec=20, mapping=None, offset=0):
+        if isinstance(backend, str):
+            backend = self.backend_from_name(backend)
         self.buffer_msec = buffer_msec/100
         self.buttons_state = defaultdict(lambda: EventTypes.release)
 
@@ -147,25 +159,29 @@ class Joystick():
         t = threading.Thread(target=self._handle_new_events)
         t.start()
 
+    def backend_from_name(self, backend_name):
+        """:type backend_name: str"""
+        return {'evdev': RawEVDEVJoystick,
+                'sdl': RawSDLJoystick}[backend_name.lower()]
+
     def _handle_new_events(self):
         while True:
             self.raw_joystick.wait()
             sleep(self.buffer_msec)
             events = self.get_events()
             events_tuple = self.to_states_tuple(events)
-            self.notify_callback(events_tuple)
+            if any(events_tuple):
+                self.notify_callback(events_tuple)
 
     def to_states_tuple(self, events):
-        containers = {EventTypes.hold: [],
-                      EventTypes.push: [],
-                      EventTypes.release: []}
+        containers = {event_type: [] for event_type in EventTypes}
 
         for (button, type) in events:
             containers[type].append(button)
 
-        pushed = containers[EventTypes.push]
-        released = containers[EventTypes.release]
-        held = containers[EventTypes.hold]
+        pushed = frozenset(containers[EventTypes.push])
+        released = frozenset(containers[EventTypes.release])
+        held = frozenset(containers[EventTypes.hold])
         return states_tuple(pushed=pushed, released=released, held=held)
 
     def get_events(self):
@@ -189,11 +205,13 @@ class Joystick():
         et = EventTypes
 
         transitions = {
-                (et.release, et.push): et.push,
+                (et.release, et.push): et.new_push,
+                (et.new_push, et.push): et.hold,
+                (et.new_push, et.release): et.push,
+
                 (et.push, et.push): et.hold,
-                (et.push, et.hold): et.hold,
                 (et.hold, et.push): et.hold,
-                (et.hold, et.hold): et.hold,
+
                 (et.push, et.release): et.release,
                 (et.hold, et.release): et.release,
         }
