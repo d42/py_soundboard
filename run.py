@@ -14,7 +14,7 @@ def parse_options():
     parser.add_argument('--type', default='evdev')
     parser.add_argument('device', default='/dev/input/event0')
     parser.add_argument('--verbose', action="store_true")
-    parser.add_argument('--scancode-offset', default=0)
+    parser.add_argument('--scancode-offset', default=0, type=int)
     return parser.parse_args(sys.argv[1:])
 
 
