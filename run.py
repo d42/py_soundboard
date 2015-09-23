@@ -14,6 +14,7 @@ def parse_options():
     parser.add_argument('--type', default='evdev')
     parser.add_argument('device', default='/dev/input/event0')
     parser.add_argument('--verbose', action="store_true")
+    parser.add_argument('--scancode-offset', default=0)
     return parser.parse_args(sys.argv[1:])
 
 
@@ -28,7 +29,7 @@ def main():
     b.register_sound_set('default')
     b.register_joystick(Joystick(options.device, backend=options.type,
                                  mapping=physical_mapping,
-                                 offset=1))
+                                 offset=options.scancode_offset))
     b.run()
 
 
