@@ -19,6 +19,7 @@ class Board(Thread):
         self.joystick.set_callback(self.on_buttons)
 
     def register_sound_set(self, name, combo=frozenset()):
+        combo = frozenset(combo)
         if self.combo_sets.get(combo, None):
             raise ValueError("combo %s is already occupied" % combo)
 
