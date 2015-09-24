@@ -10,8 +10,6 @@ logger = logging.getLogger('board')
 class Board(Thread):
     def __init__(self):
 
-        self._state = set()
-
         self.combo_sets = {}
 
     def register_joystick(self, joystick):
@@ -31,21 +29,18 @@ class Board(Thread):
         """:type buttons: states_tuple"""
         logger.debug(buttons)
         pushed, held, released = buttons.pushed, buttons.held, buttons.released
-        sound_set = self.combo_sets.get(held, None)
-        if not sound_set:
-            return
-        sound_set.play(pushed)
+        self.play_sounds(pushed, held)
+        self.finish_sounds(released)
 
-    @property
-    def buttons(self):
-        buttons_set = {i for i, value in enumerate(self._state) if value > 0}
-        return buttons_set
+    def play_sounds(self, pushed, held):
+        if not pushed: return  # noqa
+        if held not in self.combo_sets: return  # noqa
+        self.combo_sets[held].play(pushed)
 
-    def play_sounds(self):
+    def finish_sounds(self, released):
         pass
 
     def run(self):
         self.running = True
         while self.running:
-            self.play_sounds()
             time.sleep(0.3)
