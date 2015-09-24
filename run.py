@@ -27,6 +27,7 @@ def main():
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
     b = Board()
     b.register_sound_set('default')
+    b.register_sound_set('hl', {3})
     b.register_joystick(Joystick(options.device, backend=options.type,
                                  mapping=physical_mapping,
                                  offset=options.scancode_offset))
