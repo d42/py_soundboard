@@ -56,6 +56,7 @@ class SoundInterface():
 
 
 class Sound(SoundInterface):
+    running = False
 
     def __init__(self, data, mixer):
         """:type mixer: SDLMixer"""
@@ -73,13 +74,14 @@ class Sound(SoundInterface):
     def next_sound(self, chunks, current_position):
         return chunks[current_position]
 
-    def on_end(self): pass
+    def on_end(self, chunks, current_position):
+        return chunks[current_position]
 
-    def on_start(self): pass
+    def on_start(self, chunks, current_position):
+        return chunks[current_position]
 
     def set_name(self, name):
-        if not name:
-            raise ValueError("name is empty")
+        if not name: raise ValueError("name is empty")  # noqa
         self._name = name
 
     @property
@@ -94,11 +96,13 @@ class Sound(SoundInterface):
         return self.__hash__
 
     def play(self):
+        self.running = True
         self.chunk.play()
         self._next_sound()
 
-    def stop(self):
-        self.on_end()  # TODO:
+    def end(self):
+        self.running = False
+        self.chunk = self.on_end(self.chunk, self.chunks.index(self.chunk))
 
 
 @decorator_register_sound
@@ -128,6 +132,9 @@ class ListSound(Sound):
     def next_sound(self, chunks, current_position):
         size = len(chunks)
         return chunks[(current_position + 1) % size]
+
+    def on_end(self, chunks, current_position):
+        return chunks[0]
 
 
 @decorator_register_sound
@@ -225,5 +232,8 @@ class SoundSet(object):
         if not sound: return  # noqa
         sound.play()
 
-    def stop(self, buttons):
+    def stop(self, released_buttons):
+        for buttons, sound in self.sounds.values:
+            if released_buttons & buttons and sound.running:
+                sound.end()
         pass  # TODO:
