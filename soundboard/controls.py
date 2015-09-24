@@ -1,234 +1,88 @@
-import abc
 import threading
 import logging
 import sys
 from time import sleep
-from enum import Enum
-from functools import reduce
 
-import sdl2
-import sdl2.ext
-import six
-import evdev
 
-from soundboard.utils import init_sdl
-from collections import namedtuple, defaultdict
+from .enums import EventTypes
+from .types import states_tuple
+from .raw_controls import handlers
+from .exceptions import ControllerException
 
 
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger('controls')
 
 
-event_tuple = namedtuple('event_tuple', 'button state')
-states_tuple = namedtuple('events_change_tuple', 'pushed released held')
-
-
-class EventTypes(Enum):
-    release = 0
-    push = 1
-    hold = 2
-
-    new_push = 1000
-
-    @classmethod
-    def from_sdl(cls, sdl_event):
-        sdl_event_types = {
-            sdl2.SDL_JOYBUTTONDOWN: cls.push,
-            sdl2.SDL_JOYBUTTONUP:  cls.release
-        }
-        return sdl_event_types[sdl_event]
-
-
-class ControllerException(Exception):
-    pass
-
-
-class BaseRawJoystick:
-
-    def __init__(self, mapping, offset):
-        self._mapping = mapping
-        self._offset = offset
-        self.events = list()
-
-    def get_events(self):
-        events = self.events
-        self.events = list()
-        return events
-
-    def wait(self):
-        while not self.events:
-            sleep(0.1)
-            self._pump_events()
-
-    def pump(self, events):
-        """ :type events: list(EventTypes)"""
-        for (button, type) in events:
-            button = self._translate(button)
-            t = event_tuple(button, type)
-            logger.info("event %s", t)
-            self.events.append(t)
-
-    def _translate(self, physical_button):
-        if self._offset:
-            physical_button -= self._offset
-
-        if self._mapping:
-            return self._mapping.get(physical_button, physical_button)
-        else:
-            return physical_button
-
-
-class RawSDLJoystick(BaseRawJoystick):
-    _listened_events = (sdl2.SDL_JOYBUTTONUP, sdl2.SDL_JOYBUTTONDOWN)
-
-    def __init__(self, joystick_id, mapping=None, offset=0):
-        sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b"1")
-        super(RawSDLJoystick, self).__init__(mapping, offset)
-        init_sdl()
-
-        self.joystick = sdl2.SDL_JoystickOpen(joystick_id)
-        if not self.joystick:
-            raise ControllerException("Joystick %d could not be initialized" %
-                                      joystick_id)
-
-    def _pump_events(self):
-        events = []
-        for event in sdl2.ext.get_events():
-            if event.type in self._listened_events:
-                events.append(self._translate_event(event))
-        self.pump(events)
-        return bool(self.events)
-
-    def _translate_event(self, event):
-        button = event.button.jbutton
-        type = EventTypes.from_sdl(event.type)
-        return event_tuple(button, type)
-
-
-class RawEVDEVJoystick(BaseRawJoystick):
-    def __init__(self, device_path, mapping=None, offset=0):
-        super(RawEVDEVJoystick, self).__init__(mapping, offset)
-        self.joystick = evdev.InputDevice(device_path)
-
-    def _pump_events(self):
-
-        events = []
-        while True:
-            event = self.joystick.read_one()
-            if not event:
-                break
-
-            if event.type == evdev.ecodes.EV_KEY:
-                events.append(self._pump_one_event(event))
-
-        self.pump(events)
-
-    def _pump_one_event(self, evdev_event):
-        input_event = getattr(evdev_event, 'event', evdev_event)
-        button = input_event.code
-        type = EventTypes(min(input_event.value, 1))  # hack hack hack :3
-        return event_tuple(button, type)
-
-
-class StubJoystick:
-    def __init__(self, device_path, mapping=None, offset=0):
-        pass
-
-    def wait(self):
-        return True
-
-    def get_events(self):
-        e1 = event_tuple(4, EventTypes.push)
-        e2 = event_tuple(4, EventTypes.release)
-        return [e1, e2]
-
-
 class Joystick():
     callback = None
 
-    def __init__(self, joystick_id, backend=RawEVDEVJoystick,
-                 buffer_msec=20, mapping=None, offset=0):
-        if isinstance(backend, str):
-            backend = self.backend_from_name(backend)
+    def __init__(self, joystick_id, backend='evdev',
+                 buffer_msec=25, mapping=None, offset=0):
+
+        self.raw_joystick = self.open_joystick(
+            joystick_id, backend, mapping, offset)
+
         self.buffer_msec = buffer_msec/100
-        self.buttons_state = defaultdict(lambda: EventTypes.release)
+        self.held = set()
 
-        self.raw_joystick = backend(
-            joystick_id, mapping=mapping, offset=offset)
-
-        t = threading.Thread(target=self._handle_new_events)
+        t = threading.Thread(target=self._event_loop)
         t.start()
 
-    def backend_from_name(self, backend_name):
-        """:type backend_name: str"""
-        return {'evdev': RawEVDEVJoystick,
-                'sdl': RawSDLJoystick}[backend_name.lower()]
+    def open_joystick(self, joystick_id, backend, mapping, offset):
+        if isinstance(backend, str) and backend in handlers:
+            backend = handlers[backend]
+        else:
+            ControllerException("unknown type %s" % backend)
+        return backend(joystick_id, mapping=mapping, offset=offset)
 
-    def _handle_new_events(self):
+    def _event_loop(self):
         while True:
-            self.raw_joystick.wait()
             sleep(self.buffer_msec)
-            events = self.get_events()
-            events_tuple = self.to_states_tuple(events)
-            if any(events_tuple):
-                self.notify_callback(events_tuple)
+            self.raw_joystick.update()
 
-    def to_states_tuple(self, events):
-        containers = {event_type: [] for event_type in EventTypes}
+            if not self.raw_joystick.isempty:
+                sleep(self.buffer_msec)
+                self.raw_joystick.update()
 
-        for (button, type) in events:
-            containers[type].append(button)
+            events = self.raw_joystick.pop_events()
+            events_tuple = self.postprocess(events)
+            self.notify_callback(events_tuple)
 
-        pushed = frozenset(containers[EventTypes.push])
-        released = frozenset(containers[EventTypes.release])
-        held = frozenset(containers[EventTypes.hold])
-        return states_tuple(pushed=pushed, released=released, held=held)
+    def postprocess(self, events):
+        pushed, released, held = self.to_states_sets(events)
+        self.held |= pushed
+        self.held -= released
+        held |= self.held
+        pushed -= held
+        released -= pushed
+        events_tuple = self.freeze_states([pushed, released, held])
+        return events_tuple
 
-    def get_events(self):
-        joystick_events = self.raw_joystick.get_events()
-        events_unique = self.filter_events(joystick_events)
-        events_final = self.update_held_buttons(events_unique)
-        return events_final
+    def update_state(self, event):
+        state_op = (self.pushed.discard if event.type == EventTypes.release
+                    else self.pushed.add)
+        state_op(event.button)
 
-    @staticmethod
-    def filter_events(events):
-        unique_events = []
-        for e in events:
-            if not unique_events:
-                unique_events.append(e)
-            elif unique_events[-1] != e:
-                unique_events.append(e)
-        return unique_events
+    def to_states_sets(self, events):
+        containers = {event_type: set() for event_type in EventTypes}
+        for (button, state) in events:
+            containers[state].add(button)
 
-    def update_held_buttons(self, events):
-        buttons_final = []
-        et = EventTypes
+        pushed = containers[EventTypes.push]
+        released = containers[EventTypes.release]
+        held = containers[EventTypes.hold]
+        return pushed, released, held
 
-        transitions = {
-                (et.release, et.push): et.new_push,
-                (et.new_push, et.push): et.hold,
-                (et.new_push, et.release): et.push,
-
-                (et.push, et.push): et.hold,
-                (et.hold, et.push): et.hold,
-
-                (et.push, et.release): et.release,
-                (et.hold, et.release): et.release,
-        }
-
-        for (button, new_state) in events:
-            current_state = self.buttons_state[button]
-            state = transitions[(current_state, new_state)]
-            self.buttons_state[button] = state
-            buttons_final.append(event_tuple(button, state))
-        return buttons_final
+    def freeze_states(self, states):
+        frozen_states = [frozenset(s) for s in states]
+        return states_tuple(*frozen_states)
 
     def notify_callback(self, events):
-        if self.callback:
+        if self.callback and events:
             self.callback(events)
 
     def set_callback(self, callback):
         if self.callback:
             raise ValueError("Callback already registered")
         self.callback = callback
-    pass

@@ -12,6 +12,7 @@ def init_sdl():
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_AUDIO)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
     sdl2.SDL_GameControllerAddMappingsFromFile(b"gamecontrollerdb.txt")
+    sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b"1")
 
     result = sdlmixer.Mix_OpenAudio(sdlmixer.MIX_DEFAULT_FREQUENCY,
                                     sdlmixer.MIX_DEFAULT_FORMAT,

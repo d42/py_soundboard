@@ -30,7 +30,7 @@ class Board(Thread):
     def on_buttons(self, buttons):
         """:type buttons: states_tuple"""
         logger.debug(buttons)
-        pushed, released, held = buttons.pushed, buttons.released, buttons.held
+        pushed, held, released = buttons.pushed, buttons.held, buttons.released
         sound_set = self.combo_sets.get(held, None)
         if not sound_set:
             return
