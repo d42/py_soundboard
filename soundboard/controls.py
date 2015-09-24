@@ -59,11 +59,6 @@ class Joystick():
         events_tuple = self.freeze_states([pushed, released, held])
         return events_tuple
 
-    def update_state(self, event):
-        state_op = (self.pushed.discard if event.type == EventTypes.release
-                    else self.pushed.add)
-        state_op(event.button)
-
     def to_states_sets(self, events):
         containers = {event_type: set() for event_type in EventTypes}
         for (button, state) in events:
