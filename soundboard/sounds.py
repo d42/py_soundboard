@@ -102,7 +102,7 @@ class Sound(SoundInterface):
 
     def end(self):
         self.running = False
-        self.chunk = self.on_end(self.chunk, self.chunks.index(self.chunk))
+        self.chunk = self.on_end(self.chunks, self.chunks.index(self.chunk))
 
 
 @decorator_register_sound
@@ -233,7 +233,7 @@ class SoundSet(object):
         sound.play()
 
     def stop(self, released_buttons):
-        for buttons, sound in self.sounds.values:
+        for (buttons, sound) in self.sounds.items():
             if released_buttons & buttons and sound.running:
                 sound.end()
         pass  # TODO:

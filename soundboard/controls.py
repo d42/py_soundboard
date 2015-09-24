@@ -23,8 +23,11 @@ class Joystick():
         self.raw_joystick = self.open_joystick(
             joystick_id, backend, mapping, offset)
 
-        self.buffer_msec = buffer_msec/100
+        self.buffer_time = buffer_msec/100
+        self.buffer_action_time = (buffer_msec/8)/100
         self.held = set()
+        self.released = set()
+        self.action = False
 
         t = threading.Thread(target=self._event_loop)
         t.start()
@@ -38,11 +41,12 @@ class Joystick():
 
     def _event_loop(self):
         while True:
-            sleep(self.buffer_msec)
+            sleep(self.buffer_action_time if self.action else self.buffer_time)
             self.raw_joystick.update()
 
             if not self.raw_joystick.isempty:
-                sleep(self.buffer_msec)
+                if not self.action:
+                    sleep(self.buffer_time)
                 self.raw_joystick.update()
 
             events = self.raw_joystick.pop_events()
@@ -53,9 +57,17 @@ class Joystick():
         pushed, released, held = self.to_states_sets(events)
         self.held |= pushed
         self.held -= released
+        self.released |= released
+
         held |= self.held
         pushed -= held
+
+        released |= self.released
         released -= pushed
+        self.released -= released
+
+        self.action = bool(pushed | held)
+
         events_tuple = self.freeze_states([pushed, released, held])
         return events_tuple
 
