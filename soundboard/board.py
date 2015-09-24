@@ -38,6 +38,8 @@ class Board(Thread):
         self.combo_sets[held].play(pushed)
 
     def finish_sounds(self, released):
+        for sound_set in self.combo_sets.values():
+            sound_set.stop(released)
         pass
 
     def run(self):

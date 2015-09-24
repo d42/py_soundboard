@@ -97,6 +97,9 @@ class Sound(SoundInterface):
         self.chunk.play()
         self._next_sound()
 
+    def stop(self):
+        self.on_end()  # TODO:
+
 
 @decorator_register_sound
 class SimpleSound(Sound):
@@ -184,7 +187,6 @@ class SoundSet(object):
         self.name = name
         self.busy_time = time()
 
-        self.running_sounds = set()
         logging.info("Creating board %s", name)
 
         self.sounds_factory = SoundFactory(mixer)
@@ -215,36 +217,13 @@ class SoundSet(object):
 
             self.sounds[position] = sound_instance
 
-    def end_sounds(self):
-        if not self.running_sounds:
-            return
-
-        while time() < self.busy_time:
-            continue
-        for s in self.running_sounds:
-            s.on_end()
-
-        self.running_sounds = set()
-
     def play(self, buttons):
-        if not buttons:
-            return
+        if not buttons: return  # noqa
 
         buttons = frozenset(buttons)
         sound = self.sounds.get(buttons, None)
-        if not sound:
-            logging.error("ENOSOUND")
-            return
-        # if time() < self.busy_time:
-        #     logging.error("ETOOEARLY")
-        #     return
-        #
-        # # c, s = self.timeout_settings
-        # # self.busy_time = (time() + c) + (sound.duration * s)
-        # self.busy_time = time() + sound.duration * 0.5
-
-        # if sound not in self.running_sounds:
-        #     sound.on_start()
-        #     self.running_sounds.add(sound)
-        # else:
+        if not sound: return  # noqa
         sound.play()
+
+    def stop(self, buttons):
+        pass  # TODO:
