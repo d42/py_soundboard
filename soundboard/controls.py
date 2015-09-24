@@ -24,7 +24,7 @@ class Joystick():
             joystick_id, backend, mapping, offset)
 
         self.buffer_time = buffer_msec/100
-        self.buffer_action_time = (buffer_msec/8)/100
+        self.buffer_action_time = (buffer_msec/1.4)/100
         self.held = set()
         self.released = set()
         self.action = False
@@ -66,7 +66,7 @@ class Joystick():
         released -= pushed
         self.released -= released
 
-        self.action = bool(pushed | held)
+        self.action = bool(pushed)
 
         events_tuple = self.freeze_states([pushed, released, held])
         return events_tuple
