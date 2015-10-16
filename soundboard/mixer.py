@@ -65,4 +65,4 @@ class RawSound():
 
     def play(self):
         self.mixer.play(self.raw)
-        sleep(self.duration)
+        sleep(self.duration - 0.25)

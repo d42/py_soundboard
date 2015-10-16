@@ -15,6 +15,7 @@ from soundboard.vox import voxify
 from soundboard import constants
 from soundboard.config import YAMLConfig
 from soundboard.mixer import SDLMixer
+from soundboard.types import sound_state
 
 
 class SoundFactory:
@@ -29,9 +30,7 @@ class SoundFactory:
 
     def by_name(self, name):
         cls = self.sound_names[name]
-        cls_partial = partial(cls, mixer=self.mixer)
-        cls_wrapped = update_wrapper(cls_partial, cls)
-        return cls_wrapped
+        return cls(mixer=self.mixer)
 
     def __getattr__(self, attr):
         return self.by_name(attr)
@@ -58,51 +57,57 @@ class SoundInterface():
 class Sound(SoundInterface):
     running = False
 
-    def __init__(self, data, mixer):
+    def __init__(self, mixer, data=None):
         """:type mixer: SDLMixer"""
         self.mixer = mixer
-        self.create(data)
+        self.name = "I'm So unnammed"
+        self.current_chunk = None
 
-    def create(self, paths):
+        if data: self.setup(data)
+
+    def setup(self, paths):
         self.chunks = [self.mixer.read(p) for p in paths]
-        self.chunk = self.chunks[0]
+        self.chunk = None
 
-    def _next_sound(self):
-        self.chunk = self.next_sound(self.chunks,
-                                     self.chunks.index(self.chunk))
+    @staticmethod
+    def on_next(chunks, state):
+        return chunks[(state.position + 1) % len(chunks)]
 
-    def next_sound(self, chunks, current_position):
-        return chunks[current_position]
+    @staticmethod
+    def on_end(chunks, state):
+        return None
 
-    def on_end(self, chunks, current_position):
-        return chunks[current_position]
+    @staticmethod
+    def on_start(chunks, state):
+        return chunks[state.position if state.position else 0]
 
-    def on_start(self, chunks, current_position):
-        return chunks[current_position]
+    def signal(self, name):
+        func = getattr(self, 'on_' + name)
+        current_state = self._get_state()
+        chunk = func(self.chunks, current_state)
+        return chunk
 
-    def set_name(self, name):
-        if not name: raise ValueError("name is empty")  # noqa
-        self._name = name
+    def _get_state(self):
+        chunk = self.current_chunk
+        position = self.chunks.index(chunk) if chunk in self.chunks else None
+        return sound_state(chunk, position)
 
-    @property
-    def duration(self):
-        return sum(chunk.duration for chunk in self.chunks)
-
-    @property
-    def name(self):
-        if self._name:
-            return self._name
-
-        return self.__hash__
+    def _obtain_chunk(self):  # sup :3
+        signals = ['start', 'next'][1 if self.running else 0:]
+        chunk = next(chunk for chunk in map(self.signal, signals) if chunk)
+        return chunk
 
     def play(self):
+        self.current_chunk = self._obtain_chunk()
+        self.current_chunk.play()
         self.running = True
-        self.chunk.play()
-        self._next_sound()
+        return self.current_chunk.duration
 
     def end(self):
         self.running = False
-        self.chunk = self.on_end(self.chunks, self.chunks.index(self.chunk))
+        chunk = self.signal('end')
+        if chunk:
+            return chunk.play()  # noqa
 
 
 @decorator_register_sound
@@ -110,9 +115,8 @@ class SimpleSound(Sound):
     simple_name = 'simple'
     config_sounds_attribute = 'file'
 
-    def create(self, path):
+    def setup(self, path):
         self.chunks = [self.mixer.read(path)]
-        self.chunk = self.chunks[0]
 
 
 @decorator_register_sound
@@ -120,7 +124,8 @@ class RandomSound(Sound):
     simple_name = 'random'
     config_sounds_attribute = 'files'
 
-    def next_sound(self, chunks, current_position):
+    @staticmethod
+    def on_next(chunks, state):
         return random.choice(chunks)
 
 
@@ -129,12 +134,29 @@ class ListSound(Sound):
     simple_name = 'list'
     config_sounds_attribute = 'files'
 
-    def next_sound(self, chunks, current_position):
-        size = len(chunks)
-        return chunks[(current_position + 1) % size]
-
-    def on_end(self, chunks, current_position):
+    @staticmethod
+    def on_start(chunks, state):
         return chunks[0]
+
+
+@decorator_register_sound
+class WrappedSound(Sound):
+    simple_name = 'wrapped'
+    config_sounds_attribute = 'files'
+
+    @staticmethod
+    def on_next(chunks, state):
+        top = len(chunks) - 1
+        pos = max(1, ((state.position + 1) % top))
+        return chunks[pos]
+
+    @staticmethod
+    def on_start(chunks, state):
+        return chunks[0]
+
+    @staticmethod
+    def on_end(chunks, state):
+        return chunks[-1]
 
 
 @decorator_register_sound
@@ -142,9 +164,8 @@ class VoxSound(Sound):
     simple_name = 'vox'
     config_sounds_attribute = 'sentence'
 
-    def create(self, sentence):
-        paths = voxify(sentence)
-        self.chunks = [self.mixer.read(p) for p in paths]
+    def setup(self, sentence):
+        self.chunks = super(VoxSound, self).setup(voxify(sentence))
 
     def play(self):
         for chunk in self.chunks:
@@ -159,7 +180,7 @@ class WeatherSound(Sound):
     base_sentence = 'black mesa topside temperature is %d degrees'
     api_url = constants.weather_url
 
-    def create(self, location):
+    def setup(self, location):
         if location.isdigit():
             self.params = {'id': int(location), 'units': 'metric'}
         else:
@@ -169,7 +190,7 @@ class WeatherSound(Sound):
         sentence = self.base_sentence % self.temperature
         if self.temperature < 0:
             sentence += 'ebin'
-        sound = VoxSound(sentence, mixer=self.mixer)
+        sound = VoxSound(data=sentence, mixer=self.mixer)
         sound.play()
 
     def update_temperature(self):
@@ -182,8 +203,8 @@ class WeatherSound(Sound):
 
     def _get_temperature(self):
         text = requests.get(self.api_url, params=self.params).text
-        j = json.loads(text)
-        temp = j.get('main', {}).get('temp', None)
+        json_content = json.loads(text)
+        temp = json_content.get('main', {}).get('temp', None)
         return temp
 
 
@@ -193,6 +214,7 @@ class SoundSet(object):
 
         self.name = name
         self.busy_time = time()
+        self.sounds = {}
 
         logging.info("Creating board %s", name)
 
@@ -207,22 +229,22 @@ class SoundSet(object):
         self._load_sounds()
 
     def _load_sounds(self):
-        self.sounds = {}
         for soundentry in self.config.sounds:
-            sound_class = self.sounds_factory.by_name(soundentry['type'])
+            sound = self._create_sound(soundentry)
 
-            sounds_attribute = sound_class.config_sounds_attribute
+            position = soundentry['position']
+            position = [position] if isinstance(position, int) else position
+            position = frozenset(position)
+            self.sounds[position] = sound
 
-            sound_instance = sound_class(soundentry[sounds_attribute])
-            name = soundentry.get('name', None)
+    def _create_sound(self, config):
+        sound = self.sounds_factory.by_name(config['type'])
+        value = config[sound.config_sounds_attribute]
+        if 'name' in config:
+            sound.name = config['name']
+        sound.setup(value)
+        return sound
 
-            p = soundentry['position']
-            position = frozenset([p]) if isinstance(p, int) else frozenset(p)
-
-            if name:
-                sound_instance.set_name(name)
-
-            self.sounds[position] = sound_instance
 
     def play(self, buttons):
         if not buttons: return  # noqa
@@ -236,4 +258,3 @@ class SoundSet(object):
         for (buttons, sound) in self.sounds.items():
             if released_buttons & buttons and sound.running:
                 sound.end()
-        pass  # TODO:

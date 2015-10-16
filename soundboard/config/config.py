@@ -31,17 +31,17 @@ class YAMLConfig:
         if 'sounds' not in self._data:
             errors.append("sounds list missing")
         else:
-            for id, sound in enumerate(self._data['sounds']):
+            for sound_id, sound in enumerate(self._data['sounds']):
                 if 'name' not in sound:
-                    errors.append("%s sound is missing name" % id)
+                    errors.append("%s sound is missing name" % sound_id)
                 else:
-                    id = "%s(%d)" % (id, sound['name'])
+                    sound_id = "%s(%d)" % (sound_id, sound['name'])
 
                 if 'position' not in sound:
-                    errors.append("%s sound is missing position" % id)
+                    errors.append("%s sound is missing position" % sound_id)
 
                 if 'type' not in sound:
-                    errors.append("%s sound is missing type" % id)
+                    errors.append("%s sound is missing type" % sound_id)
 
         if errors:
             raise Exception(errors)
@@ -49,7 +49,6 @@ class YAMLConfig:
     @property
     def sounds(self):
         return self._data['sounds']
-        pass
 
     @property
     def name(self):
