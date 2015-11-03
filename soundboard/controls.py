@@ -1,3 +1,5 @@
+from __future__ import division
+
 import threading
 import logging
 import sys
@@ -89,7 +91,7 @@ class Joystick():
         return states_tuple(*frozen_states)
 
     def notify_callback(self, events):
-        if self.callback and events:
+        if self.callback and any(events):
             self.callback(events)
 
     def set_callback(self, callback):
