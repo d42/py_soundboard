@@ -1,4 +1,5 @@
 import time
+import glob
 import logging
 from threading import Thread
 
@@ -9,8 +10,11 @@ logger = logging.getLogger('board')
 
 class Board(Thread):
     def __init__(self):
+        super(Board, self).__init__()
 
         self.combo_sets = {}
+        self.joystick = None
+        self.running = False
 
     def register_joystick(self, joystick):
         """:type joystick: soundboard.controls.Joystick"""
@@ -18,12 +22,14 @@ class Board(Thread):
         self.joystick = joystick
         self.joystick.set_callback(self.on_buttons)
 
-    def register_sound_set(self, name, combo=frozenset()):
-        combo = frozenset(combo)
-        if self.combo_sets.get(combo, None):
-            raise ValueError("combo %s is already occupied" % combo)
+    def load_from_dir(self, directory):
+        files = glob.glob("*.yaml")
 
-        sound_set = SoundSet(name)
+    def register_sound_set(self, sound_set, combo=None):
+        combo = sound_set.keys if not combo else combo
+
+        if combo in self.combo_sets:
+            raise ValueError("combo %s is already occupied" % list(combo))
         self.combo_sets[frozenset(combo)] = sound_set
 
     def on_buttons(self, buttons):
@@ -41,7 +47,6 @@ class Board(Thread):
     def finish_sounds(self, released):
         for sound_set in self.combo_sets.values():
             sound_set.stop(released)
-        pass
 
     def run(self):
         self.running = True
