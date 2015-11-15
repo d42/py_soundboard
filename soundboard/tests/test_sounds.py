@@ -2,13 +2,15 @@ from textwrap import dedent
 
 import pytest
 
+from .mocks import NOPMixer
+
 from soundboard import sounds
 from soundboard.mixer import NOPMixer
 
 
 @pytest.fixture
 def factory():
-    return sounds.SoundFactory(NOPMixer)
+    return sounds.SoundFactory(NOPMixer, 'sounds/')
 
 
 class MockRequest:
@@ -32,12 +34,12 @@ def test_sounds(monkeypatch, factory):
     vox = factory.vox("test")
     vox.play()
 
-    list = factory.list(["test/test.wav", "test/test.wav"])
+    list = factory.list(["test/test2.wav", "test/test3.wav"])
     list.play()
+    list.end()
 
-    random = factory.random(["test/test.wav", "test/test.wav"])
+    random = factory.random(["test/test.wav", "test/test3.wav"])
     random.play()
-
     monkeypatch.setattr('requests.get', lambda *args, **kwargs: MockRequest())
     weather = factory.weather("europe,warsaw")
     weather.update_temperature()

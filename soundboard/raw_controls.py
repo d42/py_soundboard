@@ -13,7 +13,7 @@ from .enums import EventTypes
 logger = logging.getLogger('controls.raw')
 
 
-class BaseRawJoystick:
+class BaseRawJoystick(object):
 
     def __init__(self, mapping=None, offset=0):
         self.mapping = mapping if mapping else dict()
@@ -30,11 +30,11 @@ class BaseRawJoystick:
         self.events = []
         return events
 
-    def process(self, events, preprocess=None):
+    def process(self, events, preprocess_func):
         """ :type events: list(EventTypes)"""
         """ :type preprocess: func -> event_tuple"""
-        if preprocess:
-            events = [preprocess(e) for e in events]
+        if preprocess_func:
+            events = [preprocess_func(e) for e in events]
 
         events = [self.translate(e) for e in events]
 

@@ -1,36 +1,37 @@
 #!/usr/bin/python3
 import os
 import sys
+import glob
 import logging
-import argparse
 
 from soundboard.board import Board
 from soundboard.controls import Joystick
-from soundboard.constants import physical_mapping
+from soundboard.sounds import SoundSet
+from soundboard.config import settings
 
 
-def parse_options():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--type', default='evdev')
-    parser.add_argument('device', default='/dev/input/event0')
-    parser.add_argument('--verbose', action="store_true")
-    parser.add_argument('--scancode-offset', default=0, type=int)
-    return parser.parse_args(sys.argv[1:])
+def get_files(directory, extension):
+    glob_path = os.path.join(directory, '*.%s' % extension)
+    return glob.glob(glob_path)
 
 
 def main():
     logger = logging.getLogger()
-    options = parse_options()
+    settings.from_args(sys.argv[1:])
 
-    if options.verbose:
+    if settings.debug:
         logger.setLevel(logging.DEBUG)
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
     b = Board()
-    b.register_sound_set('default')
-    b.register_sound_set('hl', {3})
-    b.register_joystick(Joystick(options.device, backend=options.type,
-                                 mapping=physical_mapping,
-                                 offset=options.scancode_offset))
+    for file in get_files(settings.yaml_directory, 'yaml'):
+        sound_set = SoundSet.from_yaml(file, settings=settings)
+        b.register_sound_set(sound_set)
+
+    joystick = Joystick(settings.device_path, backend=settings.input_type,
+                        mapping=settings.physical_mapping,
+                        offset=settings.scancode_offset)
+
+    b.register_joystick(joystick)
     b.run()
 
 

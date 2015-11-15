@@ -1,62 +1,87 @@
+import os
 import logging
+
 import yaml
+from argumentize import Argumentize, OptionStr, OptionInt, OptionBool
+
+from ..schema import SoundSet
 
 logger = logging.getLogger('config')
 
 
+class Settings(Argumentize):
+
+    physical_mapping = dict(enumerate([8, 7, 6, 5, 1, 2, 3, 4, 9, 10, 11, 0]))
+    buttons_count = len(physical_mapping)
+
+    wav_directory = OptionStr(os.path.expanduser("~/soundboard/files"))
+    yaml_directory = os.path.expanduser("~/soundboard/yaml")
+    debug = OptionBool(False)
+    input_type = OptionStr('evdev')
+    device_path = OptionStr('/dev/input/event0')
+    button_interval = OptionInt(10)
+    scancode_offset = OptionInt(304)
+    weather_url = OptionStr('http://api.openweathermap.org/data/2.5/weather')
+    weather_interval = OptionInt(15 * (60*1000))
+
+    delay_constant = 0
+    delay_multiplier = 0
+    sound_sleep_offset = 0.25
+
+settings = Settings('soundboard')
+
+
+class SoundStore:
+    def __init__(self):
+        self.sounds = {}
+
+    def register(self, sound_class):
+        name = sound_class.simple_name
+        self.sounds[name] = sound_class
+        return sound_class
+
+    def by_class(self, cls):
+        pass
+
+    def by_name(self, name):
+        return self.sounds[name]
+
+    def get_sound_attribute(self, sound):
+        return self.by_name(sound).config_sounds_attribute
+
+    def register_decorator(self, sound):
+        self.register(sound)
+        return sound
+
+
+class State:
+    def __init__(self, sounds=SoundStore):
+        self.sounds = sounds()
+
+state = State()
+
+
 class YAMLConfig:
-    def __init__(self, path):
+    def __init__(self, path, state=state, settings=settings):
+        self.settings = settings
+        self.state = state
         self.load(path)
 
     def load(self, path):
         self._path = path
+        logger.info("loading %s", path)
         with open(path, 'r') as file:
-            self._data = yaml.load(file.read())
+            data = yaml.load(file.read())
+
+            schema = SoundSet()
+            schema = schema.bind(
+                sounds=self.state.sounds,
+                settings=self.settings
+            )
+            self.deserialized = schema.deserialize(data)
 
     def reload(self):
         self.load(self._path)
-        self._validate()
 
-    def _validate(self):
-        errors = []
-        if 'delay_constant' not in self._data:
-            logger.warn('delay_constant MISSING, defaulting to %d', self.dc)
-
-        if 'delay_multi' not in self._data:
-            logger.warn('delay_multiplier MISSING, defaulting to %d', self.dm)
-
-        if 'name' not in self._data:
-            errors.append("name parameter missing")
-
-        if 'sounds' not in self._data:
-            errors.append("sounds list missing")
-        else:
-            for sound_id, sound in enumerate(self._data['sounds']):
-                if 'name' not in sound:
-                    errors.append("%s sound is missing name" % sound_id)
-                else:
-                    sound_id = "%s(%d)" % (sound_id, sound['name'])
-
-                if 'position' not in sound:
-                    errors.append("%s sound is missing position" % sound_id)
-
-                if 'type' not in sound:
-                    errors.append("%s sound is missing type" % sound_id)
-
-        if errors:
-            raise Exception(errors)
-
-    @property
-    def sounds(self):
-        return self._data['sounds']
-
-    @property
-    def name(self):
-        return self._data['name']
-
-    @property
-    def delay_const(self):
-        return self._data.getattr('delay_constant', 0)
-
-    def delay_multi(self):
-        return self._data.getattr('delay_multiplier', 1)
+    def __getitem__(self, item):
+        return self.deserialized[item]
