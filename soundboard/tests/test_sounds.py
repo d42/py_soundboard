@@ -42,3 +42,10 @@ def test_sounds(monkeypatch, factory):
     weather = factory.weather("europe,warsaw")
     weather.update_temperature()
     assert weather.temperature == 21.37
+
+
+def test_transport_humanize():
+    assert ZTMSound._line_humanize('13') == 'topside train number 13'
+    assert ZTMSound._line_humanize('M3') == 'subsurface train'
+    assert ZTMSound._line_humanize('123') == 'day bust number 123'
+    assert ZTMSound._line_humanize('S2') == 'transportation'

@@ -3,10 +3,12 @@ import random
 import json
 import logging
 import abc
+import re
 
 from functools import partial, update_wrapper
 from threading import Thread
 
+import arrow
 import six
 import requests
 from time import time
@@ -206,6 +208,36 @@ class WeatherSound(Sound):
         json_content = json.loads(text)
         temp = json_content.get('main', {}).get('temp', None)
         return temp
+
+
+# mock
+def _get_next_train(line, stop):
+    now = arrow.utcnow()
+    return now.replace(minutes=7, seconds=20)
+
+
+@decorator_register_sound
+class ZTMSound(Sound):
+    def setup(self, line, stop):
+        self.line = line
+        self.stop = stop
+
+    @classmethod
+    def _line_humanize(self, line):
+        if re.match(r'[0-9]{2}', line):
+            # tram
+            return 'topside train number {}'.format(line)
+        elif re.match(r'[0-9]{3}', line):
+            # day bus
+            return 'day bust number {}'.format(line)
+        elif re.match(r'm[0-9]+', line.lower()):
+            # metro line
+            return 'subsurface train'
+        else:
+            return 'transportation'
+
+    def play(self):
+        next = _get_next_train(self.line, self.stop)
 
 
 class SoundSet(object):
