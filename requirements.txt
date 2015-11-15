@@ -1,0 +1,5 @@
+evdev==0.5.0
+PySDL2==0.9.3
+PyYAML==3.11
+requests==2.8.1
+six==1.10.0
