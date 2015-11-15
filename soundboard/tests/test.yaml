@@ -1,19 +1,20 @@
 name: Test Board
 directory: test
 delay_constant: 0
+keys: [2,3,4]
 delay_multiplier: 0.5
 sounds:
     - name: whip
-      position: 0
+      keys: [0]
       type: simple
       file: whip.wav
 
     - name: random whip
-      position: 1
+      keys: [1]
       type: random
       files: whip.wav whip2.wav
 
     - name: vox test
-      position: 2
+      keys: [2]
       type: vox
       sentence: alpha bravo

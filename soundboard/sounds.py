@@ -14,34 +14,30 @@ import requests
 from time import time
 
 from soundboard.vox import voxify
-from soundboard import constants
-from soundboard.config import YAMLConfig
+from soundboard.config import YAMLConfig, state, settings
 from soundboard.mixer import SDLMixer
 from soundboard.types import sound_state
 
 
 class SoundFactory:
 
-    sound_classes = dict()
-    sound_names = dict()
-
-    def __init__(self, mixer):
+    def __init__(self, mixer, directory, state=state):
         """:type mixer: SDLMixer"""
         # https://stackoverflow.com/questions/529240/what-happened-to-types-classtype-in-python-3
         self.mixer = mixer() if isinstance(mixer, type) else mixer
+        self.state = state
+        self.directory = directory
 
     def by_name(self, name):
-        cls = self.sound_names[name]
-        return cls(mixer=self.mixer)
+        cls = self.state.sounds.by_name(name)
+        return cls(mixer=self.mixer, base_dir=self.directory)
 
     def __getattr__(self, attr):
-        return self.by_name(attr)
-
-
-def decorator_register_sound(sound):
-    SoundFactory.sound_classes[sound.__name__] = sound
-    SoundFactory.sound_names[sound.simple_name] = sound
-    return sound
+        def funky_wrapper(data):
+            sound = self.by_name(attr)
+            sound.setup(data)
+            return sound
+        return funky_wrapper
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -59,17 +55,19 @@ class SoundInterface():
 class Sound(SoundInterface):
     running = False
 
-    def __init__(self, mixer, data=None):
+    def __init__(self, mixer, base_dir, data=None):
         """:type mixer: SDLMixer"""
         self.mixer = mixer
-        self.name = "I'm So unnammed"
+        self.dir = base_dir
+        self.name = "I'm so unnammed"
         self.current_chunk = None
 
-        if data: self.setup(data)
+        if data:
+            self.setup(data)
 
     def setup(self, paths):
+        paths = [os.path.join(self.dir, p) for p in paths]
         self.chunks = [self.mixer.read(p) for p in paths]
-        self.chunk = None
 
     @staticmethod
     def on_next(chunks, state):
@@ -112,16 +110,16 @@ class Sound(SoundInterface):
             return chunk.play()  # noqa
 
 
-@decorator_register_sound
+@state.sounds.register
 class SimpleSound(Sound):
     simple_name = 'simple'
     config_sounds_attribute = 'file'
 
     def setup(self, path):
-        self.chunks = [self.mixer.read(path)]
+        super(SimpleSound, self).setup([path])
 
 
-@decorator_register_sound
+@state.sounds.register
 class RandomSound(Sound):
     simple_name = 'random'
     config_sounds_attribute = 'files'
@@ -131,7 +129,7 @@ class RandomSound(Sound):
         return random.choice(chunks)
 
 
-@decorator_register_sound
+@state.sounds.register
 class ListSound(Sound):
     simple_name = 'list'
     config_sounds_attribute = 'files'
@@ -141,7 +139,7 @@ class ListSound(Sound):
         return chunks[0]
 
 
-@decorator_register_sound
+@state.sounds.register
 class WrappedSound(Sound):
     simple_name = 'wrapped'
     config_sounds_attribute = 'files'
@@ -161,26 +159,26 @@ class WrappedSound(Sound):
         return chunks[-1]
 
 
-@decorator_register_sound
+@state.sounds.register
 class VoxSound(Sound):
     simple_name = 'vox'
     config_sounds_attribute = 'sentence'
 
     def setup(self, sentence):
-        self.chunks = super(VoxSound, self).setup(voxify(sentence))
+        super(VoxSound, self).setup(voxify(sentence))
 
     def play(self):
         for chunk in self.chunks:
             chunk.play()
 
 
-@decorator_register_sound
+@state.sounds.register
 class WeatherSound(Sound):
     temperature = 2137
     simple_name = 'weather'
     config_sounds_attribute = 'location'
     base_sentence = 'black mesa topside temperature is %d degrees'
-    api_url = constants.weather_url
+    api_url = settings.weather_url
 
     def setup(self, location):
         if location.isdigit():
@@ -189,10 +187,11 @@ class WeatherSound(Sound):
             self.params = {'q': location, 'units': 'metric'}
 
     def play(self):
+        raise NotImplementedError()
         sentence = self.base_sentence % self.temperature
         if self.temperature < 0:
             sentence += 'ebin'
-        sound = VoxSound(data=sentence, mixer=self.mixer)
+        sound = VoxSound(data=sentence, mixer=self.mixer, base_dir=self.dir)
         sound.play()
 
     def update_temperature(self):
@@ -242,41 +241,41 @@ class ZTMSound(Sound):
 
 class SoundSet(object):
 
-    def __init__(self, name, mixer=SDLMixer):
+    def __init__(self, config, mixer=SDLMixer):
 
-        self.name = name
+        self.config = config
+        self.sounds_factory = SoundFactory(mixer, config['wav_directory'])
+
         self.busy_time = time()
         self.sounds = {}
-
-        logging.info("Creating board %s", name)
-
-        self.sounds_factory = SoundFactory(mixer)
-
-        self._load_config()
-
-    def _load_config(self):
-        config = self.name + '.yaml'
-        path = os.path.join(constants.sound_sets_directory, config)
-        self.config = YAMLConfig(path)
         self._load_sounds()
 
+        logging.info("Creating board %s", self.name)
+
+    def __getattr__(self, attr):
+        if attr in ['name', 'keys']:
+            return self.config[attr]
+        raise AttributeError(attr)
+
+    @classmethod
+    def from_yaml(cls, yaml_path, settings, *args, **kwargs):
+        config = YAMLConfig(yaml_path, settings=settings)
+        return cls(config, *args, **kwargs)
+
     def _load_sounds(self):
-        for soundentry in self.config.sounds:
+        for soundentry in self.config['sounds']:
             sound = self._create_sound(soundentry)
 
-            position = soundentry['position']
-            position = [position] if isinstance(position, int) else position
-            position = frozenset(position)
-            self.sounds[position] = sound
+            keys = soundentry['keys']
+            self.sounds[keys] = sound
 
     def _create_sound(self, config):
         sound = self.sounds_factory.by_name(config['type'])
-        value = config[sound.config_sounds_attribute]
+        input = config['input']
         if 'name' in config:
             sound.name = config['name']
-        sound.setup(value)
+        sound.setup(input)
         return sound
-
 
     def play(self, buttons):
         if not buttons: return  # noqa

@@ -1,3 +1,5 @@
+from __future__ import division
+
 import threading
 import logging
 import sys
@@ -32,7 +34,8 @@ class Joystick():
         t = threading.Thread(target=self._event_loop)
         t.start()
 
-    def open_joystick(self, joystick_id, backend, mapping, offset):
+    @staticmethod
+    def open_joystick(joystick_id, backend, mapping, offset):
         if isinstance(backend, str) and backend in handlers:
             backend = handlers[backend]
         else:
@@ -71,7 +74,8 @@ class Joystick():
         events_tuple = self.freeze_states([pushed, released, held])
         return events_tuple
 
-    def to_states_sets(self, events):
+    @staticmethod
+    def to_states_sets(events):
         containers = {event_type: set() for event_type in EventTypes}
         for (button, state) in events:
             containers[state].add(button)
@@ -81,12 +85,13 @@ class Joystick():
         held = containers[EventTypes.hold]
         return pushed, released, held
 
-    def freeze_states(self, states):
+    @staticmethod
+    def freeze_states(states):
         frozen_states = [frozenset(s) for s in states]
         return states_tuple(*frozen_states)
 
     def notify_callback(self, events):
-        if self.callback and events:
+        if self.callback and any(events):
             self.callback(events)
 
     def set_callback(self, callback):

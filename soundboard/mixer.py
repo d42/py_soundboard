@@ -1,4 +1,3 @@
-import os
 import wave
 from threading import Thread
 from time import sleep
@@ -8,21 +7,21 @@ from collections import deque, namedtuple
 from sdl2 import sdlmixer
 
 from soundboard.utils import init_sdl
-from soundboard import constants
+from .config import settings
 
 chunk_tuple = namedtuple('chunk_info', 'chunk duration')
 
 
 class SDLMixer(Thread):
     def __init__(self, channel=0):
+        super(SDLMixer, self).__init__()
         self.sound_queue = deque()
         init_sdl()
         self.chunks = {}
 
-    def init():
-        init_sdl()
-
-    def play(self, chunk):
+    @staticmethod
+    def play(sound):
+        chunk = sound.raw
         if sdlmixer.Mix_PlayChannel(-1, chunk, 0) == -1:
             raise Exception("Could not play chunk")
 
@@ -36,8 +35,7 @@ class SDLMixer(Thread):
             self.sound_queue.append(s)
 
     def read(self, path):
-        fs_path = os.path.join(constants.wav_directory, path)
-        chunk = self.chunks.get(fs_path, self._load_chunk(fs_path))
+        chunk = self.chunks.get(path, self._load_chunk(path))
         return RawSound(path, chunk, self)
 
     def _load_chunk(self, fs_path):
@@ -49,8 +47,13 @@ class SDLMixer(Thread):
 
 
 class NOPMixer(SDLMixer):
+    def __init__(self, channel=0):
+        super(NOPMixer, self).__init__(channel)
+        self.played = []
 
-    def play(self, chunk):
+    def play(self, sound):
+        self.played.append(sound.path)
+        chunk = sound.raw
         if sdlmixer.Mix_PlayChannel(-1, chunk, 0) == -1:
             raise Exception("Could not play chunk")
         sdlmixer.Mix_HaltChannel(-1)
@@ -64,5 +67,5 @@ class RawSound():
         self.mixer = mixer
 
     def play(self):
-        self.mixer.play(self.raw)
-        sleep(self.duration - 0.25)
+        self.mixer.play(self)
+        sleep(self.duration - settings.sound_sleep_offset)
