@@ -250,7 +250,6 @@ class ZTMSound(Sound):
         next_human = re.sub(r'minute[^s]', 'minutes', next_human)
         human = '{} {} {}'.format(self._get_prefix(next_transport),
                                   self._line_humanize(self.line), next_human)
-        print(human)
         sound = VoxSound(data=human, mixer=self.mixer, base_dir=self.dir)
         sound.play()
 
