@@ -7,6 +7,7 @@ joystick_plugged_in = pytest.mark.joystick_plugged_in
 
 
 class StubJoystick:
+
     def __init__(self, device_path, mapping=None, offset=0):
         pass
 

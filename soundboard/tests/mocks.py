@@ -3,6 +3,7 @@ from sdl2 import sdlmixer
 
 
 class NOPMixer(SDLMixer):
+
     def __init__(self, channel=0):
         super(NOPMixer, self).__init__(channel)
         self.played = []

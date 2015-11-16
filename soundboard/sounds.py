@@ -42,14 +42,19 @@ class SoundFactory:
 
 @six.add_metaclass(abc.ABCMeta)
 class SoundInterface():
-    @abc.abstractproperty
-    def simple_name(self): pass
 
     @abc.abstractproperty
-    def config_sounds_attribute(self): pass
+    def simple_name(self):
+        pass
+
+    @abc.abstractproperty
+    def config_sounds_attribute(self):
+        pass
 
     @abc.abstractmethod
-    def play(self): pass
+    def play(self):
+        pass
+
 
 class Sound(SoundInterface):
     running = False
@@ -171,7 +176,7 @@ class VoxSound(Sound):
 
     def setup(self, sentence):
         super(VoxSound, self).setup(voxify(sentence),
-            duration_scale=self.vox_duration_scale)
+                                    duration_scale=self.vox_duration_scale)
 
     def play(self):
         super(VoxSound, self).play_all()
@@ -218,6 +223,7 @@ class WeatherSound(Sound):
 class ZTMSound(Sound):
     simple_name = 'ztm'
     config_sounds_attribute = 'line'
+
     def setup(self, line):
         self.line = line
 
@@ -257,6 +263,7 @@ class ZTMSound(Sound):
 @state.sounds.register
 class LastZTMSound(ZTMSound):
     simple_name = 'lastztm'
+
     def _get_prefix(self, next_transport):
         now = arrow.utcnow()
         seconds = (next_transport - now).seconds
@@ -312,11 +319,13 @@ class SoundSet(object):
         return sound
 
     def play(self, buttons):
-        if not buttons: return  # noqa
+        if not buttons:
+            return  # noqa
 
         buttons = frozenset(buttons)
         sound = self.sounds.get(buttons, None)
-        if not sound: return  # noqa
+        if not sound:
+            return  # noqa
         sound.play()
 
     def stop(self, released_buttons):

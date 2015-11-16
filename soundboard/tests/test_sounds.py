@@ -14,6 +14,7 @@ def factory():
 
 
 class MockRequest:
+
     @property
     def text(self):
         return dedent("""

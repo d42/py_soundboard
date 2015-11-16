@@ -22,7 +22,7 @@ class Settings(Argumentize):
     button_interval = OptionInt(10)
     scancode_offset = OptionInt(304)
     weather_url = OptionStr('http://api.openweathermap.org/data/2.5/weather')
-    weather_interval = OptionInt(15 * (60*1000))
+    weather_interval = OptionInt(15 * (60 * 1000))
 
     delay_constant = 0
     delay_multiplier = 0
@@ -32,6 +32,7 @@ settings = Settings('soundboard')
 
 
 class SoundStore:
+
     def __init__(self):
         self.sounds = {}
 
@@ -55,6 +56,7 @@ class SoundStore:
 
 
 class State:
+
     def __init__(self, sounds=SoundStore):
         self.sounds = sounds()
 
@@ -62,6 +64,7 @@ state = State()
 
 
 class YAMLConfig:
+
     def __init__(self, path, state=state, settings=settings):
         self.settings = settings
         self.state = state

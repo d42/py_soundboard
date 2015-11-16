@@ -25,8 +25,8 @@ class Joystick():
         self.raw_joystick = self.open_joystick(
             joystick_id, backend, mapping, offset)
 
-        self.buffer_time = buffer_msec/100
-        self.buffer_action_time = (buffer_msec/1.4)/100
+        self.buffer_time = buffer_msec / 100
+        self.buffer_action_time = (buffer_msec / 1.4) / 100
         self.held = set()
         self.released = set()
         self.action = False

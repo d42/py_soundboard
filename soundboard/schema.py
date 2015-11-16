@@ -19,11 +19,14 @@ def deferred_wav_directory(node, kw):
 
 
 class KeySet(colander.Set):
+
     def deserialize(self, node, cstruct):
         value = super(KeySet, self).deserialize(node, cstruct)
         return frozenset(value) if isinstance(value, set) else value
 
+
 class SoundInput:
+
     def serialize(self, node, appstruct):
         pass
 
@@ -33,8 +36,6 @@ class SoundInput:
         if isinstance(cstruct, (list, int, str)):
             return cstruct
         raise colander.Invalid(node, "%r is not a proper input" % cstruct)
-
-
 
 
 class Sound(colander.MappingSchema):
@@ -74,8 +75,16 @@ class SoundSet(colander.MappingSchema):
 
     name = colander.SchemaNode(colander.String())
     keys = colander.SchemaNode(KeySet(), missing=frozenset())
-    wav_directory = colander.SchemaNode(colander.String(), missing=deferred_wav_directory)
+    wav_directory = colander.SchemaNode(
+        colander.String(),
+        missing=deferred_wav_directory)
     vox_directory = colander.SchemaNode(colander.String(), missing=None)
-    delay_constant = colander.SchemaNode(colander.Float(), name='delay_constant', missing=deferred_delay_constant)
-    delay_m = colander.SchemaNode(colander.Float(), name='delay_multiplier', missing=deferred_delay_multiplier)
+    delay_constant = colander.SchemaNode(
+        colander.Float(),
+        name='delay_constant',
+        missing=deferred_delay_constant)
+    delay_m = colander.SchemaNode(
+        colander.Float(),
+        name='delay_multiplier',
+        missing=deferred_delay_multiplier)
     sounds = Sounds()

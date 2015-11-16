@@ -9,6 +9,7 @@ logger = logging.getLogger('board')
 
 
 class Board(Thread):
+
     def __init__(self):
         super(Board, self).__init__()
 
@@ -40,8 +41,10 @@ class Board(Thread):
         self.finish_sounds(released)
 
     def play_sounds(self, pushed, held):
-        if not pushed: return  # noqa
-        if held not in self.combo_sets: return  # noqa
+        if not pushed:
+            return  # noqa
+        if held not in self.combo_sets:
+            return  # noqa
         self.combo_sets[held].play(pushed)
 
     def finish_sounds(self, released):

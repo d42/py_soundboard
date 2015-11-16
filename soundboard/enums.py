@@ -14,6 +14,6 @@ class EventTypes(Enum):
     def from_sdl(cls, sdl_event):
         sdl_event_types = {
             sdl2.SDL_JOYBUTTONDOWN: cls.push,
-            sdl2.SDL_JOYBUTTONUP:  cls.release
+            sdl2.SDL_JOYBUTTONUP: cls.release
         }
         return sdl_event_types[sdl_event]
