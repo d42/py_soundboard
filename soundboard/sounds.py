@@ -215,7 +215,7 @@ def _get_next_train(line, stop):
     return now.replace(minutes=7, seconds=20)
 
 
-@decorator_register_sound
+@state.sounds.register
 class ZTMSound(Sound):
     def setup(self, line, stop):
         self.line = line
@@ -223,13 +223,13 @@ class ZTMSound(Sound):
 
     @classmethod
     def _line_humanize(self, line):
-        if re.match(r'[0-9]{2}', line):
+        if re.match(r'^[0-9]{1,2}$', line):
             # tram
             return 'topside train number {}'.format(line)
-        elif re.match(r'[0-9]{3}', line):
+        elif re.match(r'^[0-9]{3}$', line):
             # day bus
             return 'day bust number {}'.format(line)
-        elif re.match(r'm[0-9]+', line.lower()):
+        elif re.match(r'^m[0-9]+$', line.lower()):
             # metro line
             return 'subsurface train'
         else:

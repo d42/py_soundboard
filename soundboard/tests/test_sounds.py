@@ -47,7 +47,7 @@ def test_sounds(monkeypatch, factory):
 
 
 def test_transport_humanize():
-    assert ZTMSound._line_humanize('13') == 'topside train number 13'
-    assert ZTMSound._line_humanize('M3') == 'subsurface train'
-    assert ZTMSound._line_humanize('123') == 'day bust number 123'
-    assert ZTMSound._line_humanize('S2') == 'transportation'
+    assert sounds.ZTMSound._line_humanize('13') == 'topside train number 13'
+    assert sounds.ZTMSound._line_humanize('M3') == 'subsurface train'
+    assert sounds.ZTMSound._line_humanize('123') == 'day bust number 123'
+    assert sounds.ZTMSound._line_humanize('S2') == 'transportation'
