@@ -5,6 +5,23 @@ from threading import Thread
 logger = logging.getLogger('board')
 
 
+class Event(object):
+
+    """Docstring for Event. """
+
+    def __init__(self, callback, period, last=0):
+        """TODO: to be defined1.
+
+        :callback: TODO
+        :period: TODO
+        :last_called_at: TODO
+
+        """
+        self.callback = callback
+        self.period = period
+        self.last = last
+
+
 class Board(Thread):
 
     def __init__(self):
@@ -13,6 +30,7 @@ class Board(Thread):
         self.combo_sets = {}
         self.joystick = None
         self.running = False
+        self.events = list()
 
     def register_joystick(self, joystick):
         """:type joystick: soundboard.controls.Joystick"""
@@ -45,7 +63,18 @@ class Board(Thread):
         for sound_set in self.combo_sets.values():
             sound_set.stop(released)
 
+    def register_cyclic_event(self, period, callback):
+        event = Event(callback, period)
+        self.events.append(event)
+
+    def run_events(self):
+        now = time.time()
+        events_to_call = [e for e in self.events if (now - e.last) > e.period]
+        for event in events_to_call:
+            event.callback(self)
+
     def run(self):
         self.running = True
         while self.running:
             time.sleep(0.3)
+            self.run_events()

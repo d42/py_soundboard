@@ -183,34 +183,31 @@ class VoxSound(Sound):
 class WeatherSound(Sound):
     temperature = 2137
     simple_name = 'weather'
+    location = 'warsaw,pl'
     config_sounds_attribute = 'location'
     base_sentence = 'black mesa topside temperature is %d degrees'
-    api_url = settings.weather_url
+    api_url = None
 
     def setup(self, location):
         if location.isdigit():
-            self.params = {'id': int(location), 'units': 'metric'}
-        else:
-            self.params = {'q': location, 'units': 'metric'}
+            location = int(location)
+        self.location = location
 
     def play(self):
-        raise NotImplementedError()
         sentence = self.base_sentence % self.temperature
         if self.temperature < 0:
             sentence += 'ebin'
         sound = VoxSound(data=sentence, mixer=self.mixer, base_dir=self.dir)
         sound.play()
 
-    def update_temperature(self):
-        logging.info("temperaturatoring :3")
-        temperature = self._get_temperature()
-        if temperature is None:
-            logging.warning("Last temperature update failed")
-            return
+    def update_temperature(self, temperature):
+        logging.info("temperature for %s, %d -> %d",
+                     self.location, self.temperature, temperature)
         self.temperature = temperature
 
-    def _get_temperature(self):
-        text = requests.get(self.api_url, params=self.params).text
+    def get_temperature(cls, location, units='metric'):
+        params = {'q': location, 'units': 'metric'}
+        text = requests.get(cls.api_url, params=params).text
         json_content = json.loads(text)
         temp = json_content.get('main', {}).get('temp', None)
         return temp

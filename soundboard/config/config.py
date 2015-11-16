@@ -26,7 +26,7 @@ class Settings(Argumentize):
 
     delay_constant = 0
     delay_multiplier = 0
-    sound_sleep_offset = 0.25
+    sound_sleep_offset = 0.15
 
 settings = Settings('soundboard')
 
