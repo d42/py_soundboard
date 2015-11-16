@@ -1,4 +1,4 @@
-from io import BlockingIOError
+from io import BlockingIOError  # noqa
 
 
 class ControllerException(Exception):

@@ -23,11 +23,13 @@ class StubJoystick:
 @joystick_plugged_in
 def test_sdl():
     j = Joystick(0, backend='sdl')
+    assert j is not None
 
 
 @joystick_plugged_in
 def test_evdev():
     j = Joystick("/dev/input/event0", backend='evdev')
+    assert j is not None
 
 
 def test_controls():

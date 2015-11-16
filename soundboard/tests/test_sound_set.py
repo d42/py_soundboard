@@ -1,4 +1,3 @@
-import os
 from soundboard.sounds import SoundSet, SoundInterface
 
 test_config = {

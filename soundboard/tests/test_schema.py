@@ -1,5 +1,5 @@
 import os
-import pytest
+import pytest  # noqa
 from ..schema import SoundSet
 from ..config import settings, state
 

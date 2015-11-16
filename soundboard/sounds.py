@@ -5,9 +5,6 @@ import logging
 import abc
 import re
 
-from functools import partial, update_wrapper
-from threading import Thread
-
 import arrow
 import six
 import requests

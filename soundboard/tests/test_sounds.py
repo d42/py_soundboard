@@ -5,7 +5,6 @@ import pytest
 from .mocks import NOPMixer
 
 from soundboard import sounds
-from soundboard.mixer import NOPMixer
 
 
 @pytest.fixture
@@ -25,7 +24,7 @@ class MockRequest:
             "clouds":{"all":0},"dt":1442600185,"sys":{"type":1,"id":5374,"message":0.008,
             "country":"PL","sunrise":1442549747,"sunset":1442594587},
             "id":756135,"name":"Warsaw","cod":200}
-            """)
+            """)  # noqa
 
 
 def test_sounds(monkeypatch, factory):

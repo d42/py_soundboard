@@ -1,9 +1,6 @@
 import time
-import glob
 import logging
 from threading import Thread
-
-from soundboard.sounds import SoundSet
 
 logger = logging.getLogger('board')
 
@@ -22,9 +19,6 @@ class Board(Thread):
 
         self.joystick = joystick
         self.joystick.set_callback(self.on_buttons)
-
-    def load_from_dir(self, directory):
-        files = glob.glob("*.yaml")
 
     def register_sound_set(self, sound_set, combo=None):
         combo = sound_set.keys if not combo else combo
