@@ -43,7 +43,8 @@ class BaseRawJoystick(object):
     def translate(self, event):
         """:type event: event_tuple"""
         def shift(button): return button - self.scancode_offset
-        def remap(button): return self.mapping.get(button, button)  # noqa
+
+        def remap(button): return self.mapping.get(button, button)
         button, type = event
         new_button = remap(shift(button))
         return event_tuple(new_button, type)
@@ -57,7 +58,8 @@ class RawSDLJoystick(BaseRawJoystick):
         init_sdl()
         self.joystick = self.open_joystick(joystick_id)
 
-    def open_joystick(self, joystick_id):
+    @staticmethod
+    def open_joystick(joystick_id):
         joystick = sdl2.SDL_JoystickOpen(joystick_id)
         if not joystick:
             text = "Joystick %d could not be initialized" % joystick_id
@@ -65,6 +67,7 @@ class RawSDLJoystick(BaseRawJoystick):
         return joystick
 
     def update(self):
+
         def to_tuple(event):
             button = event.button.jbutton
             type = EventTypes.from_sdl(event.type)

@@ -42,5 +42,5 @@ def test_sounds(monkeypatch, factory):
     random.play()
     monkeypatch.setattr('requests.get', lambda *args, **kwargs: MockRequest())
     weather = factory.weather("europe,warsaw")
-    weather.update_temperature()
+    weather.update_temperature(21.37)
     assert weather.temperature == 21.37
