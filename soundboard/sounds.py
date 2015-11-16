@@ -51,7 +51,6 @@ class SoundInterface():
     @abc.abstractmethod
     def play(self): pass
 
-
 class Sound(SoundInterface):
     running = False
 
@@ -61,11 +60,13 @@ class Sound(SoundInterface):
         self.dir = base_dir
         self.name = "I'm so unnammed"
         self.current_chunk = None
+        self.duration_scale = 1.0
 
         if data:
             self.setup(data)
 
-    def setup(self, paths):
+    def setup(self, paths, duration_scale=1.0):
+        self.duration_scale = duration_scale
         paths = [os.path.join(self.dir, p) for p in paths]
         self.chunks = [self.mixer.read(p) for p in paths]
 
@@ -99,9 +100,12 @@ class Sound(SoundInterface):
 
     def play(self):
         self.current_chunk = self._obtain_chunk()
-        self.current_chunk.play()
+        self.current_chunk.play(self.duration_scale)
         self.running = True
-        return self.current_chunk.duration
+
+    def play_all(self):
+        for chunk in self.chunks:
+            chunk.play(self.duration_scale)
 
     def end(self):
         self.running = False
@@ -163,13 +167,14 @@ class WrappedSound(Sound):
 class VoxSound(Sound):
     simple_name = 'vox'
     config_sounds_attribute = 'sentence'
+    vox_duration_scale = 1.4
 
     def setup(self, sentence):
-        super(VoxSound, self).setup(voxify(sentence))
+        super(VoxSound, self).setup(voxify(sentence),
+            duration_scale=self.vox_duration_scale)
 
     def play(self):
-        for chunk in self.chunks:
-            chunk.play()
+        super(VoxSound, self).play_all()
 
 
 @state.sounds.register
@@ -209,17 +214,12 @@ class WeatherSound(Sound):
         return temp
 
 
-# mock
-def _get_next_train(line, stop):
-    now = arrow.utcnow()
-    return now.replace(minutes=7, seconds=20)
-
-
 @state.sounds.register
 class ZTMSound(Sound):
-    def setup(self, line, stop):
+    simple_name = 'ztm'
+    config_sounds_attribute = 'line'
+    def setup(self, line):
         self.line = line
-        self.stop = stop
 
     @classmethod
     def _line_humanize(self, line):
@@ -235,8 +235,43 @@ class ZTMSound(Sound):
         else:
             return 'transportation'
 
+    def _get_transport(self):
+        # mock
+        now = arrow.utcnow()
+        return now.replace(minutes=7, seconds=20)
+
+    def _get_prefix(self, next):
+        return 'next'
+
     def play(self):
-        next = _get_next_train(self.line, self.stop)
+        next_transport = self._get_transport()
+        next_human = next_transport.humanize()
+        # fixup arrow wording for Vox
+        next_human = re.sub(r'minute[^s]', 'minutes', next_human)
+        human = '{} {} {}'.format(self._get_prefix(next_transport),
+                                  self._line_humanize(self.line), next_human)
+        print(human)
+        sound = VoxSound(data=human, mixer=self.mixer, base_dir=self.dir)
+        sound.play()
+
+
+@state.sounds.register
+class LastZTMSound(ZTMSound):
+    simple_name = 'lastztm'
+    def _get_prefix(self, next_transport):
+        now = arrow.utcnow()
+        seconds = (next_transport - now).seconds
+        if seconds <= (15 * 60):
+            return 'warning warning last'
+        if seconds <= (30 * 60):
+            return 'warning last'
+        else:
+            return 'last'
+
+    def _get_transport(self):
+        # mock
+        now = arrow.utcnow()
+        return now.replace(minutes=15)
 
 
 class SoundSet(object):

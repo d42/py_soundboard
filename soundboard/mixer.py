@@ -66,6 +66,6 @@ class RawSound():
         self.raw = chunk.chunk
         self.mixer = mixer
 
-    def play(self):
+    def play(self, duration_scale=1.0):
         self.mixer.play(self)
-        sleep(self.duration - settings.sound_sleep_offset)
+        sleep((self.duration*duration_scale) - settings.sound_sleep_offset)
