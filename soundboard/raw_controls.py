@@ -42,8 +42,8 @@ class BaseRawJoystick(object):
 
     def translate(self, event):
         """:type event: event_tuple"""
-        shift = lambda(button): button - self.scancode_offset
-        remap = lambda(button): self.mapping.get(button, button)
+        shift = lambda button: button - self.scancode_offset
+        remap = lambda button: self.mapping.get(button, button)
         button, type = event
         new_button = remap(shift(button))
         return event_tuple(new_button, type)
