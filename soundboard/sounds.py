@@ -11,7 +11,7 @@ import requests
 from time import time
 
 from soundboard.vox import voxify
-from soundboard.config import YAMLConfig, state, settings
+from soundboard.config import YAMLConfig, state
 from soundboard.mixer import SDLMixer
 from soundboard.types import sound_state
 
