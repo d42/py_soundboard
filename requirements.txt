@@ -1,0 +1,13 @@
+argumentize==0.1
+arrow==0.7.0
+marshmallow==2.3.0
+evdev==0.5.0
+iso8601==0.1.11
+py==1.4.30
+PySDL2==0.9.3
+pytest==2.8.2
+python-dateutil==2.4.2
+PyYAML==3.11
+requests==2.8.1
+six==1.10.0
+translationstring==1.3
