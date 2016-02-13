@@ -1,4 +1,4 @@
-argumentize==0.1
+git+https://github.com/d42/argumentize
 arrow==0.7.0
 marshmallow==2.3.0
 evdev==0.5.0
