@@ -384,6 +384,6 @@ class SoundSet(object):
         sound.play()
 
     def stop(self, released_buttons):
-        for (buttons, sound) in self.sounds.items():
+        for (buttons, sound) in self.combinations.items():
             if released_buttons & buttons and sound.running:
                 sound.end()
