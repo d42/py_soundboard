@@ -326,6 +326,7 @@ class SoundSet(object):
     def __init__(self, config=None, mixer=SDLMixer):
 
         self.mixer = mixer
+        self.startup_sound = None
 
         self.busy_time = time()
         self.combinations = {}
