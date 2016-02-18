@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import os
 import sys
 import glob
@@ -10,11 +9,9 @@ from soundboard.sounds import SoundSet
 from soundboard.config import settings
 from soundboard.http import HTTPThread
 
-
 def get_files(directory, extension):
     glob_path = os.path.join(directory, '*.%s' % extension)
     return glob.glob(glob_path)
-
 
 def main():
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
