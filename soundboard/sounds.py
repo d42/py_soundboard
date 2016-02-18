@@ -294,8 +294,10 @@ class ZTMSound(Sound):
         req = self.api.get()
         if req.status != JSONApi.OK:
             logger.critical(req)
-        sentence = self._ztm2text(req.data)
-        sound.setup(sentence)
+            sound.setup(req.status)
+        else:
+            sentence = self._ztm2text(req.data)
+            sound.setup(sentence)
         sound.play()
 
 

@@ -1,5 +1,7 @@
 import time
 import logging
+import traceback
+
 from .enums import ModifierTypes
 from .controls import ControlHandler
 from .client_api import ApiManager
@@ -59,7 +61,11 @@ class Board():
 
         if not pushed:
             return
-        sound_set.play(pushed)
+        try:
+            sound_set.play(pushed)
+        except Exception as e:
+            traceback.print_exc()
+            logging.critical(e)
 
     def finish_sounds(self, released):
         for sound_set in self.combinations.values():
