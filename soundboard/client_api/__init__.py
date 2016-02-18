@@ -1,6 +1,7 @@
 import time
 import json
 import logging
+import traceback
 from threading import Thread
 
 import requests
@@ -31,15 +32,16 @@ class ApiManager(Thread):
                 try:
                     instance.update()
                 except Exception as es:
+                    traceback.print_exc()
                     logger.critical("api exception: %s", es)
 
 
 class ApiClient:
 
     OK = 'OK'
-    DISCONNECTED = 'DISCONNECTED'
+    DISCONNECTED = 'ERROR'
     UNAUTHORIZED = 'UNAUTHORIZED'
-    UNKNOWN = 'UNKNOWN'
+    UNKNOWN = 'MALFUNCTION'
     TIMEOUT = 'timeout'
     cacheme = True
 
