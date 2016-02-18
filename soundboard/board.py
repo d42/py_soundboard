@@ -15,7 +15,8 @@ class Board():
         '''
         self.settings = settings
 
-        self.combo_sets = {}
+        self.api_manager = ApiManager()
+        self.combinations = {}
         self.shared_online = {}
         self.control = ControlHandler()
         self.running = False
@@ -35,9 +36,9 @@ class Board():
         self.shared_online[endpoint] = sound_set
 
     def register_on_keys(self, sound_set, keys):
-        if keys in self.combo_sets:
+        if keys in self.combinations:
             raise ValueError("combo %s is occupied" % list(keys))
-        self.combo_sets[frozenset(keys)] = sound_set
+        self.combinations[frozenset(keys)] = sound_set
 
     def on_buttons(self, buttons):
         """:type buttons: states_tuple"""
@@ -48,10 +49,10 @@ class Board():
 
     def play_sounds(self, pushed, held):
 
-        if held not in self.combo_sets:
+        if held not in self.combinations:
             return
 
-        sound_set = self.combo_sets[held]
+        sound_set = self.combinations[held]
         if sound_set is not self.active_sound_set:
             sound_set.on_activate()
             self.active_sound_set = sound_set
@@ -61,13 +62,12 @@ class Board():
         sound_set.play(pushed)
 
     def finish_sounds(self, released):
-        for sound_set in self.combo_sets.values():
+        for sound_set in self.combinations.values():
             sound_set.stop(released)
 
     def run(self):
         self.running = True
-        api_manager = ApiManager()
-        api_manager.start()
+        self.api_manager.start()
 
         buffers = {
             False: self.settings.button_poll_buffer/100,
@@ -84,4 +84,4 @@ class Board():
             is_active = True
             self.on_buttons(buttons)
 
-        api_manager.stop()
+        self.api_manager.stop()

@@ -233,7 +233,7 @@ class WeatherSound(Sound):
             logger.critical(req)
             sound.setup(req.status)
         else:
-            temperature = req.data.get('main', {}).get('temp', None)
+            temperature = req.data.get('main', {}).get('temp')
             self.temperature = temperature
             sentence = self._weather2text(temperature)
             sound.setup(sentence)
@@ -323,38 +323,42 @@ class LastZTMSound(ZTMSound):
 
 class SoundSet(object):
 
-    def __init__(self, config, mixer=SDLMixer):
+    def __init__(self, config=None, mixer=SDLMixer):
 
-        self.config = config
-        self.sounds_factory = SoundFactory(mixer, config['wav_directory'])
-        self.startup_sound = None
+        self.mixer = mixer
 
         self.busy_time = time()
+        self.combinations = {}
         self.sounds = {}
-        self._load_sounds()
+        if config:
+            self.load_config(config)
 
-        logger.info("Creating board %s", self.name)
+        logger.info("created board %s", self.name)
 
-    def __getattr__(self, attr):
-        if attr in ['name', 'keys', 'modifiers']:
-            return self.config[attr]
-        raise AttributeError(attr)
+    def load_config(self, config):
+        self.sounds_factory = SoundFactory(self.mixer, config['wav_directory'])
+        self.name = config['name']
+        self.keys = config['keys']
+        self.modifiers = config['modifiers']
+        self._load_sounds(config)
 
     @classmethod
     def from_yaml(cls, yaml_path, settings, *args, **kwargs):
         cfg = config.YAMLConfig(yaml_path, settings=config.settings)
         return cls(cfg, *args, **kwargs)
 
-    def _load_sounds(self):
-        startup_entry = self.config.get('startup', {}).get('sound', None)
+    def _load_sounds(self, config):
+        startup_entry = config.get('startup', {}).get('sound')
         if startup_entry:
             self.startup_sound = self._create_sound(startup_entry)
 
-        for soundentry in self.config['sounds']:
+        for soundentry in config['sounds']:
             sound = self._create_sound(soundentry)
 
             keys = soundentry['keys']
-            self.sounds[keys] = sound
+            name = soundentry['name']
+            self.combinations[keys] = sound
+            self.sounds[name] = sound
 
     def _create_sound(self, sound_cfg):
         sound = self.sounds_factory.by_name(sound_cfg['type'])
@@ -370,12 +374,12 @@ class SoundSet(object):
 
     def play(self, buttons):
         if not buttons:
-            return  # noqa
+            return
 
         buttons = frozenset(buttons)
-        sound = self.sounds.get(buttons, None)
+        sound = self.combinations.get(buttons)
         if not sound:
-            return  # noqa
+            return
         sound.play()
 
     def stop(self, released_buttons):
