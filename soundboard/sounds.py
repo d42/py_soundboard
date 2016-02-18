@@ -204,7 +204,7 @@ class WeatherSound(Sound):
     name = 'weather'
     location = 'warsaw,pl'
     config_attributes = ['location']
-    sentence = 'black mesa topside temperature is %d degrees'
+    sentence = 'topside temperature is %d degrees'
     below_zero = 'sub zero'
     temperature = 2137
 
