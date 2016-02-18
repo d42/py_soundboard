@@ -6,7 +6,7 @@ setup(
     packages=find_packages(exclude=['soundboard.tests']),
     entry_points={
         'console_scripts': [
-            'ebin = soundboard.__main__:main'
+            'soundboard = soundboard.__main__:main'
         ]},
     install_requires=[
         'argumentize',
