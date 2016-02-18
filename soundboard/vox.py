@@ -20,4 +20,4 @@ def voxify(sentence):
         else [w]
         for w in sentence.split()
     )
-    return ["vox/{}.wav".format(w) for w in words]
+    return ["vox/{}.wav".format(w).lower() for w in words]
