@@ -24,8 +24,8 @@ class SoundSet(Resource):
         return {'sounds': [s.name for s in sound_set.sounds.values()]}
 
 
-@api.resource('/stats')
-class Stats(Resource)
+# @api.resource('/stats')
+# class Stats(Resource)
 
 
 @api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
