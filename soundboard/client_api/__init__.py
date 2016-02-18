@@ -87,6 +87,7 @@ class JSONApi(ApiClient):
 
     def fetch_update(self):
         http_to_status = {200: self.OK, 401: self.UNAUTHORIZED}
+        logging.info("requesting {} ({})".format(self.url, self.params))
         try:
             req = requests.get(self.url, params=self.params, timeout=5)
         except requests.exceptions.ConnectionError:
