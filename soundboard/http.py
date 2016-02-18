@@ -1,6 +1,40 @@
 from threading import Thread
 from six.moves.queue import Queue
-from flask import Flask, render_template, url_for
+from flask import Flask, url_for, current_app, g
+from flask_restful import Api, Resource
+
+api = Api()
+
+
+@api.resource('/')
+class Index(Resource):
+    def get(self):
+        board = current_app.board
+        return {'sound_sets': list(board.shared_online)}
+
+
+@api.resource('/sound_set/<string:set_name>', endpoint='sound_set')
+class SoundSet(Resource):
+    def get(self, set_name):
+        board = current_app.board
+        sound_set = board.shared_online.get(set_name)
+        if not sound_set:
+            return '>:'
+
+        return {'sounds': [s.name for s in sound_set.sounds.values()]}
+
+
+# @api.resource('/stats')
+# class Stats(Resource)
+
+
+@api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
+class Play(Resource):
+    def get(self, set_name, sound_name):
+        board = current_app.board
+        sound_set = board.shared_online.get(set_name)
+        sound = sound_set.sounds[sound_name]
+        sound.play()
 
 
 class FlaskApp:
@@ -11,37 +45,11 @@ class FlaskApp:
         self.queue = Queue()
 
         self.app = Flask(__name__)
-        self.app.add_url_rule('/', 'index', self.index)
-        self.app.add_url_rule('/joystick/<int:button_id>', 'push_joystick', self.push_joystick)
-        self.app.add_url_rule('/board/<set_name>', 'sound_set', self.list_sound_set)
-        self.app.add_url_rule('/board/<set_name>/<sound_name>', 'play_sound', self.play_sound)
+        self.app.board = board
+        self.api = api.init_app(self.app)
 
     def run(self, *args, **kwargs):
         self.app.run(*args, **kwargs)
-
-    def index(self):
-        links = {key: url_for('sound_set', set_name=key)
-                 for key in self.board.shared_online}
-        return render_template('list.html', links=links, title='sound_sets')
-
-    def list_sound_set(self, set_name):
-        sound_set = self.board.shared_online.get(set_name)
-        if not sound_set:
-            return '>:'
-
-        links = {sound.name: url_for('play_sound', set_name=set_name, sound_name=sound.name)
-                 for sound in sound_set.sounds.values()}
-        return render_template('list.html', links=links, title='SOUNDS')
-
-    def push_joystick(self, button_id):
-        self.queue.put(button_id)
-        return ':3'
-
-    def play_sound(self, set_name, sound_name):
-        sound_set = self.board.shared_online.get(set_name)
-        sound = next(s for s in sound_set.sounds.values() if s.name == sound_name)
-        sound.play()
-        return ':3'
 
 
 class HTTPThread(Thread):

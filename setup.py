@@ -20,6 +20,8 @@ setup(
         'requests==2.8.1',
         'six==1.10.0',
         'translationstring==1.3',
+        'Flask==0.10.1',
+        'Flask-RESTful==0.3.5'
     ],
 
     dependency_links=[
