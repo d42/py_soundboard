@@ -224,7 +224,7 @@ class WeatherSound(Sound):
     @classmethod
     def _weather2text(cls, temperature):
         text = cls.sentence + ' ' + (cls.below_zero if temperature < 0 else '')
-        return text % int(temperature)
+        return text % abs(int(temperature))
 
     def play(self):
         sound = VoxSound(mixer=self.mixer, base_dir=self.dir)
