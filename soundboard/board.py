@@ -1,3 +1,5 @@
+from __future__ import division
+
 import time
 import logging
 import traceback
@@ -82,6 +84,7 @@ class Board():
         is_active = False
 
         while self.running:
+            time.sleep(1/100)
             buttons = self.control.poll_buffered(buffers[is_active])
             if not any(buttons):
                 is_active = False
