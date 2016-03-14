@@ -190,7 +190,7 @@ class VoxSound(Sound):
 
     def setup(self, sentence):
         try:
-            super(VoxSound, self).setup(voxify(sentence),
+            super(VoxSound, self).setup(voxify(sentence.lower()),
                                         duration_const=self.vox_duration_const)
         except SoundException as e:
             raise VoxException(e.msg, e.filename, sentence)
