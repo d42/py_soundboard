@@ -27,6 +27,16 @@ class SoundSet(Resource):
 # @api.resource('/stats')
 # class Stats(Resource)
 
+@api.resource('/doorbell', endpoint='doorbell')
+class Doorbell(Resource):
+    def post(self):
+        board = current_app.board
+        sound_set = board.shared_online.get('special')
+        if not sound_set:
+            return
+        sound = sound_set['doorbell']
+        sound.play()
+
 
 @api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
 class Play(Resource):
