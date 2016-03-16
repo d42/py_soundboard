@@ -122,14 +122,14 @@ class Sound(SoundInterface):
         sample = next(sample for sample in map(self.signal, signals) if sample)
         return sample
 
-    def play(self, **kwargs):
+    def play(self, async=False, **kwargs):
         self.current_sample = self._obtain_sample()
-        self.current_sample.play(self.duration_const)
+        self.current_sample.play(self.duration_const, async=async)
         self.running = True
 
-    def play_all(self):
+    def play_all(self, async=False):
         for sample in self.samples:
-            sample.play(self.duration_const)
+            sample.play(self.duration_const, async=async)
 
     def end(self):
         self.running = False

@@ -35,7 +35,7 @@ class Doorbell(Resource):
         if not sound_set:
             return
         sound = sound_set['doorbell']
-        sound.play()
+        sound.play(async=True)
 
 
 @api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
@@ -44,7 +44,7 @@ class Play(Resource):
         board = current_app.board
         sound_set = board.shared_online.get(set_name)
         sound = sound_set.sounds[sound_name]
-        sound.play()
+        sound.play(async=True)
 
 
 class FlaskApp:
