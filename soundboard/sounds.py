@@ -338,6 +338,9 @@ class SoundSet(object):
 
         logger.info("created board %s", self.name)
 
+    def __getitem__(self, key):
+        return self.sounds[key]
+
     def load_config(self, config):
         self.sounds_factory = SoundFactory(self.mixer, config['wav_directory'])
         self.name = config['name']
