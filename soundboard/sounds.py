@@ -203,7 +203,6 @@ class VoxSound(Sound):
 class WeatherSound(Sound):
     name = 'weather'
     location = 'warsaw,pl'
-    config_attributes = ['location']
     sentence = 'topside temperature is %d degrees'
     below_zero = 'sub zero'
     temperature = 2137
@@ -243,7 +242,6 @@ class WeatherSound(Sound):
 @config.state.sounds.register
 class ZTMSound(Sound):
     name = 'ztm'
-    config_attributes = ['line']
 
     def setup(self, line, stop, direction):
         jakdojade_url = self.settings.jakdojade_url
