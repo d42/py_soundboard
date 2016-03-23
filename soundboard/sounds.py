@@ -3,10 +3,12 @@ import random
 import logging
 import abc
 import re
+from threading import Thread
 from time import time
 
 import six
 import arrow
+import requests
 
 from soundboard.vox import voxify
 from soundboard import config
@@ -297,6 +299,30 @@ class ZTMSound(Sound):
             sentence = self._ztm2text(req.data)
             sound.setup(sentence)
         sound.play()
+
+
+@config.state.sounds.register
+class PopeSound(SoundInterface):
+    name = 'pope'
+
+    def setup(self, path, pope, delay):
+        self.sound = Sound(data=dict(paths=[path]))
+        self.pope = pope
+        self.delay = delay
+
+    def play(self, async=False):
+        self.pope_start(self.delay)
+        self.sound.play(async=False)  # TODO: fixme :3
+        self.pope_stop()
+
+    def pope_start(self):
+        def func():
+            time.sleep(self.delay)
+            requests.head(self.pope + '/spin')
+        Thread(target=func).start()
+
+    def pope_stop(self, delay):
+        requests.head(self.pope + '/stop')
 
 
 class SoundSet(object):
