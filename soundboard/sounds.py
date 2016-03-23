@@ -4,7 +4,7 @@ import logging
 import abc
 import re
 from threading import Thread
-from time import time
+from time import time, sleep
 
 import six
 import arrow
@@ -302,27 +302,31 @@ class ZTMSound(Sound):
 
 
 @config.state.sounds.register
-class PopeSound(SoundInterface):
+class PopeSound(Sound):
     name = 'pope'
+    pope_api = 'http://papiez.waw.hackerspace.pl/api/{pope_id}/head/{op}'
 
-    def setup(self, path, pope, delay):
-        self.sound = Sound(data=dict(paths=[path]))
-        self.pope = pope
+    def setup(self, path, pope_id, delay):
+        self.sound = SimpleSound(mixer=self.mixer, base_dir=self.dir)
+        self.sound.setup(path=path)
+        self.pope_id = pope_id
         self.delay = delay
 
     def play(self, async=False):
-        self.pope_start(self.delay)
+        self.pope_start()
         self.sound.play(async=False)  # TODO: fixme :3
         self.pope_stop()
 
     def pope_start(self):
         def func():
-            time.sleep(self.delay)
-            requests.head(self.pope + '/spin')
+            sleep(self.delay)
+            url = self.pope_api.format(pope_id=self.pope_id, op='start')
+            requests.get(url)
         Thread(target=func).start()
 
-    def pope_stop(self, delay):
-        requests.head(self.pope + '/stop')
+    def pope_stop(self):
+        url = self.pope_api.format(pope_id=self.pope_id, op='stop')
+        requests.get(url)
 
 
 class SoundSet(object):
