@@ -138,6 +138,9 @@ class Sound(SoundInterface):
             return sample.play()  # noqa
 
 
+# https://stackoverflow.com/questions/3862310/how-can-i-find-all-subclasses-of-a-given-class-in-python
+# TODO: Increase magic
+
 @config.state.sounds.register
 class SimpleSound(Sound):
     name = 'simple'
