@@ -299,28 +299,6 @@ class ZTMSound(Sound):
         sound.play()
 
 
-@config.state.sounds.register
-class LastZTMSound(ZTMSound):
-    name = 'lastztm'
-
-    @staticmethod
-    def _get_prefix(next_transport):
-        now = arrow.utcnow()
-        seconds = (next_transport - now).seconds
-        if seconds <= (15 * 60):
-            return 'warning warning last'
-        if seconds <= (30 * 60):
-            return 'warning last'
-        else:
-            return 'last'
-
-    @staticmethod
-    def _get_transport():
-        # mock
-        now = arrow.utcnow()
-        return now.replace(minutes=15)
-
-
 class SoundSet(object):
 
     def __init__(self, config=None, mixer=SDLMixer):
