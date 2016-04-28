@@ -3,10 +3,12 @@ import random
 import logging
 import abc
 import re
-from time import time
+from threading import Thread
+from time import time, sleep
 
 import six
 import arrow
+import requests
 
 from soundboard.vox import voxify
 from soundboard import config
@@ -206,7 +208,6 @@ class VoxSound(Sound):
 class WeatherSound(Sound):
     name = 'weather'
     location = 'warsaw,pl'
-    config_attributes = ['location']
     sentence = 'topside temperature is %d degrees'
     below_zero = 'sub zero'
     temperature = 2137
@@ -246,7 +247,6 @@ class WeatherSound(Sound):
 @config.state.sounds.register
 class ZTMSound(Sound):
     name = 'ztm'
-    config_attributes = ['line']
 
     def setup(self, line, stop, direction):
         jakdojade_url = self.settings.jakdojade_url
@@ -305,25 +305,31 @@ class ZTMSound(Sound):
 
 
 @config.state.sounds.register
-class LastZTMSound(ZTMSound):
-    name = 'lastztm'
+class PopeSound(Sound):
+    name = 'pope'
+    pope_api = 'http://papiez.waw.hackerspace.pl/api/{pope_id}/head/{op}'
 
-    @staticmethod
-    def _get_prefix(next_transport):
-        now = arrow.utcnow()
-        seconds = (next_transport - now).seconds
-        if seconds <= (15 * 60):
-            return 'warning warning last'
-        if seconds <= (30 * 60):
-            return 'warning last'
-        else:
-            return 'last'
+    def setup(self, path, pope_id, delay):
+        self.sound = SimpleSound(mixer=self.mixer, base_dir=self.dir)
+        self.sound.setup(path=path)
+        self.pope_id = pope_id
+        self.delay = delay
 
-    @staticmethod
-    def _get_transport():
-        # mock
-        now = arrow.utcnow()
-        return now.replace(minutes=15)
+    def play(self, async=False):
+        self.pope_start()
+        self.sound.play(async=False)  # TODO: fixme :3
+        self.pope_stop()
+
+    def pope_start(self):
+        def func():
+            sleep(self.delay)
+            url = self.pope_api.format(pope_id=self.pope_id, op='start')
+            requests.get(url)
+        Thread(target=func).start()
+
+    def pope_stop(self):
+        url = self.pope_api.format(pope_id=self.pope_id, op='stop')
+        requests.get(url)
 
 
 class SoundSet(object):
