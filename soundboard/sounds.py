@@ -9,6 +9,7 @@ from time import time, sleep
 import six
 import arrow
 import requests
+from prometheus_client import Counter
 
 from soundboard.vox import voxify
 from soundboard import config
@@ -19,6 +20,8 @@ from soundboard.exceptions import SoundException, VoxException
 from soundboard import utils
 
 logger = logging.getLogger('sounds')
+
+sound_counter = Counter("soundboard_total", "", ['sound_set', 'sound_name'])
 
 
 class SoundFactory:
@@ -149,6 +152,10 @@ class SimpleSound(Sound):
 
     def setup(self, path):
         super(SimpleSound, self).setup([path])
+
+    @property
+    def duration(self):
+        return self.samples[0].duration
 
 
 @config.state.sounds.register
@@ -308,6 +315,8 @@ class ZTMSound(Sound):
 class PopeSound(Sound):
     name = 'pope'
     pope_api = 'http://papiez.waw.hackerspace.pl/api/{pope_id}/head/{op}'
+    pope_counter = Counter("soundboard_pope_rotations_total", "")
+    pope_rpm = 33
 
     def setup(self, path, pope_id, delay):
         self.sound = SimpleSound(mixer=self.mixer, base_dir=self.dir)
@@ -331,6 +340,10 @@ class PopeSound(Sound):
         url = self.pope_api.format(pope_id=self.pope_id, op='stop')
         requests.get(url)
 
+    def handle_prometheus(self, board_name):
+        rotation_time = self.sound.duration - self.delay
+        self.pope_counter.inc(amount=(rotation_time/60) * self.pope_rpm)
+
 
 class SoundSet(object):
 
@@ -347,8 +360,8 @@ class SoundSet(object):
 
         logger.info("created board %s", self.name)
 
-    def __getitem__(self, key):
-        return self.sounds[key]
+    def __getitem__(self, name):
+        return self.sounds[name]
 
     def load_config(self, config):
         self.sounds_factory = SoundFactory(self.mixer, config['wav_directory'])
@@ -373,6 +386,9 @@ class SoundSet(object):
             keys = soundentry['keys']
             name = soundentry['name']
             self.combinations[keys] = sound
+            if name in self.sounds:
+                raise ValueError("%s sound %s already defined",
+                                 self.name, name)
             self.sounds[name] = sound
 
     def _create_sound(self, sound_cfg):
@@ -387,7 +403,13 @@ class SoundSet(object):
         if self.startup_sound:
             self.startup_sound.play()
 
-    def play(self, buttons):
+    def sound_name(self, sound):
+        for k, v in self.sounds.items():
+            if v is sound:
+                return k
+        raise ValueError("Sound not found")
+
+    def play(self, buttons, prometheus=False):
         if not buttons:
             return
 
@@ -395,7 +417,17 @@ class SoundSet(object):
         sound = self.combinations.get(buttons)
         if not sound:
             return
+
         sound.play()
+        if not prometheus:
+            return
+
+        sound_name = self.sound_name(sound)
+        if hasattr(sound, 'handle_prometheus'):
+            sound.handle_prometheus(self.name)
+        else:
+            sound_counter.labels(
+                {'sound_set': self.name, 'sound_name': sound_name}).inc()
 
     def stop(self, released_buttons):
         for (buttons, sound) in self.combinations.items():

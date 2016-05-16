@@ -12,7 +12,7 @@ setup(
         'argumentize',
         'arrow==0.7.0',
         'marshmallow==2.3.0',
-        'evdev==0.5.0',
+        'evdev==0.6.0',
         'iso8601==0.1.11',
         'PySDL2==0.9.3',
         'python-dateutil==2.4.2',

@@ -64,7 +64,8 @@ class Board():
         if not pushed:
             return
         try:
-            sound_set.play(pushed)
+            sound_set.play(pushed, prometheus=self.settings.prometheus)
+
         except Exception as e:
             traceback.print_exc()
             logging.critical(e)

@@ -30,6 +30,8 @@ class Settings(Argumentize):
     http = OptionBool(True)
     http_ip = OptionStr('0.0.0.0')
     http_port = OptionInt(8080)
+    prometheus = OptionBool(True)
+    prometheus_port = OptionInt(8000)
 
     delay_constant = 0
     delay_multiplier = 0

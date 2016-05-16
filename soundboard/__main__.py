@@ -3,6 +3,8 @@ import sys
 import glob
 import logging
 
+from prometheus_client import start_http_server
+
 from soundboard.board import Board
 from soundboard.controls import Joystick
 from soundboard.sounds import SoundSet
@@ -21,6 +23,8 @@ def main():
     logger = logging.getLogger()
     settings.from_files(cfg='yaml', verbose=True)
     settings.from_args(sys.argv[1:])
+    if settings.prometheus:
+        start_http_server(settings.prometheus_port)
 
     b = Board(settings)
     http = HTTPThread(b, settings)
