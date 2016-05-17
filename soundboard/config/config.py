@@ -24,7 +24,7 @@ class Settings(Argumentize):
     button_poll_buffer = OptionInt(35)
     button_poll_active_buffer = OptionInt(15)
     scancode_offset = OptionInt(304)
-    weather_url = OptionStr('http://api.openweathermap.org/data/2.5/weather')
+    weather_url = OptionStr('http://127.0.0.1:7654')
     weather_interval = OptionInt(15 * (60 * 1000))
     jakdojade_url = OptionStr('http://localhost:5000/schedule/next')
     http = OptionBool(True)

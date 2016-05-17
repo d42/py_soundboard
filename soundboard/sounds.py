@@ -214,20 +214,20 @@ class VoxSound(Sound):
 @config.state.sounds.register
 class WeatherSound(Sound):
     name = 'weather'
-    location = 'warsaw,pl'
+    location_id = 'warsaw,pl'
     sentence = 'topside temperature is %d degrees'
     below_zero = 'sub zero'
     temperature = 2137
 
-    def setup(self, location, weather_url=None, interval=None):
+    def setup(self, location_id, weather_url=None, interval=None):
         weather_url = weather_url or self.settings.weather_url
         interval = interval or self.settings.weather_interval
 
-        if location.isdigit():
-            location = int(location)
-        self.location = location
+        location = int(location_id)
+        self.location_id = location_id
+
         self.api = JSONApi(weather_url,
-                           q=location,
+                           id=location_id,
                            units='metric',
                            appid='44db6a862fba0b067b1930da0d769e98',
                            _interval=interval)

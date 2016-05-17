@@ -71,7 +71,7 @@ class ApiClient:
         self.timestamp = time.time()
 
     def get(self):
-        if self.stale:
+        if self.stale or self._status != self.OK:
             self.update()
         return api_state(self._content, self._status)
 
