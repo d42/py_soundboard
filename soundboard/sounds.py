@@ -215,7 +215,7 @@ class VoxSound(Sound):
 class WeatherSound(Sound):
     name = 'weather'
     location_id = 'warsaw,pl'
-    sentence = 'topside temperature is %d degrees'
+    sentence = 'topside temperature is %s degrees'
     below_zero = 'sub zero'
     temperature = 2137
 
@@ -235,7 +235,7 @@ class WeatherSound(Sound):
     @classmethod
     def _weather2text(cls, temperature):
         text = cls.sentence + ' ' + (cls.below_zero if temperature < 0 else '')
-        return text % abs(int(temperature))
+        return text % abs(temperature)
 
     def play(self):
         sound = VoxSound(mixer=self.mixer, base_dir=self.dir)
