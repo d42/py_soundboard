@@ -314,14 +314,12 @@ class ZTMSound(Sound):
 @config.state.sounds.register
 class PopeSound(Sound):
     name = 'pope'
-    pope_api = 'http://papiez.waw.hackerspace.pl/api/{pope_id}/head/{op}'
     pope_counter = Counter("soundboard_pope_rotations_total", "")
     pope_rpm = 33
 
-    def setup(self, path, pope_id, delay):
+    def setup(self, path, pope_api, delay):
         self.sound = SimpleSound(mixer=self.mixer, base_dir=self.dir)
         self.sound.setup(path=path)
-        self.pope_id = pope_id
         self.delay = delay
 
     def play(self, async=False):
@@ -332,12 +330,12 @@ class PopeSound(Sound):
     def pope_start(self):
         def func():
             sleep(self.delay)
-            url = self.pope_api.format(pope_id=self.pope_id, op='start')
+            url = self.pope_api.format(op='start')
             requests.get(url)
         Thread(target=func).start()
 
     def pope_stop(self):
-        url = self.pope_api.format(pope_id=self.pope_id, op='stop')
+        url = self.pope_api.format(op='stop')
         requests.get(url)
 
     def handle_prometheus(self, board_name):
