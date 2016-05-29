@@ -113,11 +113,15 @@ class Board():
         self.mqtt_client.on_connect = on_connect
         self.mqtt_client.on_log = on_log
         self.mqtt_client.on_message = on_message
-        self.mqtt_client.connect("mqtt.waw.hackerspace.pl", 1883, 60)
+        self.mqtt_client.connect(server, 1883, 60)
 
 
     def poll_mqtt(self):
-        self.mqtt_client.loop(timeout=1.0)
+        ret_val = self.mqtt_client.loop(timeout=1.0)
+        if ret_val:
+            print("mqtt failure: %d" % ret_val)
+            server, channel = self.settings.mqtt_path.split('/', 1)
+            self.mqtt_client.connect(server, 1883, 60)
 
     def run(self):
         self.running = True
