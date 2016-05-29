@@ -21,6 +21,7 @@ class SoundSchema(Schema):
     name = fields.Str(required=True)
     keys = Frozenset(fields.Int())
     type = fields.Str(required=True)
+    dank = fields.Boolean(missing=False)
     attributes = fields.Dict(required=True)
 
     @pre_load
