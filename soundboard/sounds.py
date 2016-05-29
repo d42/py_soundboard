@@ -318,6 +318,7 @@ class PopeSound(Sound):
     pope_rpm = 33
 
     def setup(self, path, pope_api, delay):
+        self.pope_api = pope_api
         self.sound = SimpleSound(mixer=self.mixer, base_dir=self.dir)
         self.sound.setup(path=path)
         self.delay = delay
