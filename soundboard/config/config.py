@@ -32,6 +32,8 @@ class Settings(Argumentize):
     http_port = OptionInt(8080)
     prometheus = OptionBool(True)
     prometheus_port = OptionInt(8000)
+    mqtt = OptionBool(True)
+    mqtt_path = OptionStr('mqtt.waw.hackerspace.pl/hswaw/#')
 
     delay_constant = 0
     delay_multiplier = 0
