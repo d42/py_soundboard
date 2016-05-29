@@ -94,10 +94,14 @@ class Board():
             client.subscribe(channel)
 
         def on_message(client, userdata, msg):
+            print(msg.topic, msg.payload)
             if msg.topic ==  'hswaw/dank/state':
                 allow = {b'safe': False, b'engaged': True}[msg.payload]
                 if allow == self.board_state['allow_dank_memes']:
                     return
+                mode = 'engaged' if allow else 'disengaged'
+                sound = self.sound_factory.vox('may may mode %s' % mode)
+                sound.play()
                 self.board_state['allow_dank_memes'] = allow
                 print(self.board_state)
 
