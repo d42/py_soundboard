@@ -11,13 +11,13 @@ import arrow
 import requests
 from prometheus_client import Counter
 
-from soundboard.vox import voxify
-from soundboard import config
-from soundboard.mixer import SDLMixer
-from soundboard.types import sound_state
-from soundboard.client_api import JSONApi
-from soundboard.exceptions import SoundException, VoxException
-from soundboard import utils
+from .vox import voxify
+from . import config
+from .mixer import SDLMixer
+from .types import sound_state
+from .client_api import JSONApi
+from .exceptions import SoundException, VoxException
+from . import utils
 
 logger = logging.getLogger('sounds')
 
@@ -347,12 +347,13 @@ class SoundSet(object):
 
     def __init__(self, config=None, mixer=SDLMixer):
 
-        self.mixer = mixer
+        self.mixer = mixer() if isinstance(mixer, type) else mixer
         self.startup_sound = None
 
         self.busy_time = time()
         self.combinations = {}
         self.sounds = {}
+        self.dank_sounds = set()
         if config:
             self.load_config(config)
 
@@ -371,7 +372,7 @@ class SoundSet(object):
     @classmethod
     def from_yaml(cls, yaml_path, settings, *args, **kwargs):
         cfg = config.YAMLConfig(yaml_path, settings=config.settings)
-        return cls(cfg, *args, **kwargs)
+        return cls(config=cfg, *args, **kwargs)
 
     def _load_sounds(self, config):
         startup_entry = config.get('startup', {}).get('sound')
@@ -383,11 +384,14 @@ class SoundSet(object):
 
             keys = soundentry['keys']
             name = soundentry['name']
+            dank = soundentry['dank']
             self.combinations[keys] = sound
             if name in self.sounds:
                 raise ValueError("%s sound %s already defined",
                                  self.name, name)
             self.sounds[name] = sound
+            if dank:
+                self.dank_sounds.add(sound)
 
     def _create_sound(self, sound_cfg):
         sound = self.sounds_factory.by_name(sound_cfg['type'])
@@ -407,7 +411,8 @@ class SoundSet(object):
                 return k
         raise ValueError("Sound not found")
 
-    def play(self, buttons, prometheus=False):
+    def play(self, buttons, prometheus=False, board_state=None):
+        board_state = board_state or dict()
         if not buttons:
             return
 
@@ -415,6 +420,10 @@ class SoundSet(object):
         sound = self.combinations.get(buttons)
         if not sound:
             return
+
+        if sound in self.dank_sounds and not board_state.get('allow_dank_memes'):
+            sound = self.sounds_factory.by_name('vox')
+            sound.setup('access denied')
 
         sound.play()
         if not prometheus:
