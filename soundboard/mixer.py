@@ -7,11 +7,13 @@ from sdl2 import sdlmixer
 
 from soundboard.utils import init_sdl
 from .config import settings
+from .utils import Singleton
 
 chunk_tuple = namedtuple('chunk_info', 'chunk duration')
 
 
-class SDLMixer():
+
+class SDLMixer(metaclass=Singleton):
 
     def __init__(self, channel=0):
         super(SDLMixer, self).__init__()
