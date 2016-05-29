@@ -30,8 +30,8 @@ def main():
     http = HTTPThread(b, settings)
     http.start()
     for file in get_files(settings.yaml_directory, 'yaml'):
-        sound_set = SoundSet.from_yaml(file, settings=settings)
-        b.register_sound_set(sound_set)
+        # sound_set = SoundSet.from_yaml(file, settings=settings)
+        b.register_sound_set(yamlfile=file)
 
     joystick = Joystick(settings.device_path, backend=settings.input_type,
                         mapping=settings.physical_mapping,
