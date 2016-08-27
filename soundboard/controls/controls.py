@@ -2,7 +2,6 @@ from __future__ import division
 
 import logging
 import time
-import sys
 from itertools import chain
 
 
@@ -82,7 +81,6 @@ class ControlHandler():
         self.released -= released
 
         return states_tuple(*map(frozenset, [pushed, released, held]))
-
 
     @staticmethod
     def to_states_sets(events):
