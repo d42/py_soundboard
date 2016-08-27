@@ -1,5 +1,7 @@
 import os
 import random
+import glob
+import socket
 import logging
 import abc
 import re
@@ -342,6 +344,27 @@ class PopeSound(Sound):
     def handle_prometheus(self, board_name):
         rotation_time = self.sound.duration - self.delay
         self.pope_counter.inc(amount=(rotation_time/60) * self.pope_rpm)
+
+
+@config.state.sounds.register
+class MovieRoulette(Sound):
+    name = 'movieroulette'
+
+    def setup(self, path, destination):
+        full_path = os.path.join(self.dir, path)
+        if not os.path.exists(full_path):
+            raise ValueError("Path %s does not exist" % path)
+        self.files_path = full_path
+        self.destination = destination
+
+    def play(self):
+        files = glob.glob(os.path.join(self.files_path, '*'))
+        file_path = random.choice(files)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            host, port = self.destination.split(':')
+            s.connect((host, int(port)))
+            with open(file_path, 'rb') as file:
+                s.sendfile(file)
 
 
 class SoundSet(object):
