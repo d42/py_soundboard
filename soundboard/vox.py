@@ -2,7 +2,6 @@ from itertools import chain
 import re
 
 
-
 def _separate_decimal(words):
     replacements = {}
     for i, w in enumerate(words[1:], start=1):
@@ -15,11 +14,11 @@ def _separate_decimal(words):
     return words
 
 
-
 def voxify(sentence):
     special_replace = {
         '.': 'point'
     }
+
     def d(num):
         n = int(num)
         if n == 0:

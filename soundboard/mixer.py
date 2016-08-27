@@ -1,6 +1,6 @@
 import wave
 from time import sleep
-from collections import deque, namedtuple
+from collections import namedtuple
 
 
 from sdl2 import sdlmixer
@@ -60,5 +60,6 @@ class RawSound():
 
     def play(self, duration_const=0, async=False):
         self.mixer.play(self.raw)
-        if async: return
+        if async:
+            return
         sleep((self.duration + duration_const) - settings.sound_sleep_offset)

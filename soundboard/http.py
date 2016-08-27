@@ -1,6 +1,6 @@
 from threading import Thread
 from six.moves.queue import Queue
-from flask import Flask, url_for, current_app, g
+from flask import Flask, current_app, g
 from flask_restful import Api, Resource
 
 api = Api()

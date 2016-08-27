@@ -9,7 +9,6 @@ from threading import Thread
 from time import time, sleep
 
 import six
-import arrow
 import requests
 from prometheus_client import Counter
 
@@ -225,7 +224,6 @@ class WeatherSound(Sound):
         weather_url = weather_url or self.settings.weather_url
         interval = interval or self.settings.weather_interval
 
-        location = int(location_id)
         self.location_id = location_id
 
         self.api = JSONApi(weather_url,

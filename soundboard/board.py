@@ -88,13 +88,14 @@ class Board():
         import paho.mqtt.client as mqtt
 
         server, channel = path.split('/', 1)
+
         def on_connect(client, userdata, flags, rc):
             print("bebin")
             client.subscribe(channel)
 
         def on_message(client, userdata, msg):
             print(msg.topic, msg.payload)
-            if msg.topic ==  'hswaw/dank/state':
+            if msg.topic == 'hswaw/dank/state':
                 allow = {b'safe': False, b'engaged': True}[msg.payload]
                 if allow == self.board_state['allow_dank_memes']:
                     return
@@ -114,7 +115,6 @@ class Board():
         self.mqtt_client.on_message = on_message
         self.mqtt_client.connect(server, 1883, 60)
 
-
     def poll_mqtt(self):
         ret_val = self.mqtt_client.loop(timeout=1.0)
         if ret_val:
@@ -131,7 +131,6 @@ class Board():
             True: self.settings.button_poll_active_buffer/100
         }
         is_active = False
-
 
         while self.running:
             if not is_active and self.settings.mqtt:
