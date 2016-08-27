@@ -78,8 +78,7 @@ class Board():
         try:
             sound_set.play(pushed, prometheus=self.settings.prometheus, board_state=self.board_state)
         except Exception as e:
-            traceback.print_exc()
-            logging.critical(e)
+            logger.exception(e)
 
     def finish_sounds(self, released):
         for sound_set in self.combinations.values():
