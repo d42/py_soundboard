@@ -345,6 +345,25 @@ class PopeSound(Sound):
 
 
 @config.state.sounds.register
+class Movie(Sound):
+    name = 'movie'
+
+    def setup(self, path, destination):
+        full_path = os.path.join(self.dir, path)
+        if not os.path.exists(full_path):
+            raise ValueError("Path %s does not exist" % path)
+        self.file_path = full_path
+        self.destination = destination
+
+    def play(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            host, port = self.destination.split(':')
+            s.connect((host, int(port)))
+            with open(self.file_path, 'rb') as file:
+                s.sendfile(file)
+
+
+@config.state.sounds.register
 class MovieRoulette(Sound):
     name = 'movieroulette'
 
