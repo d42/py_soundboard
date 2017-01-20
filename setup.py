@@ -22,7 +22,7 @@ setup(
         'translationstring==1.3',
         'Flask==0.10.1',
         'Flask-RESTful==0.3.5',
-        'paho-mqtt==1.1'
+        'paho-mqtt==1.2'
     ],
 
     dependency_links=[
