@@ -331,12 +331,12 @@ class PopeSound(Sound):
     def pope_start(self):
         def func():
             sleep(self.delay)
-            url = self.pope_api.format(op='start')
+            url = self.pope_api.format(op='on')
             requests.get(url)
         Thread(target=func).start()
 
     def pope_stop(self):
-        url = self.pope_api.format(op='stop')
+        url = self.pope_api.format(op='off')
         requests.get(url)
 
     def handle_prometheus(self, board_name):
