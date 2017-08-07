@@ -27,8 +27,11 @@ def main():
         start_http_server(settings.prometheus_port)
 
     b = Board(settings)
-    http = HTTPThread(b, settings)
-    http.start()
+    if settings.http:
+        http = HTTPThread(b, settings)
+        http_joystick = Joystick(http.queue, backend='queue')
+        b.register_joystick(http_joystick)
+        http.start()
     for file in get_files(settings.yaml_directory, 'yaml'):
         # sound_set = SoundSet.from_yaml(file, settings=settings)
         b.register_sound_set(yamlfile=file)
@@ -38,8 +41,6 @@ def main():
                         offset=settings.scancode_offset)
 
     b.register_joystick(joystick)
-    http_joystick = Joystick(http.queue, backend='queue')
-    b.register_joystick(http_joystick)
     b.run()
 
 
