@@ -127,14 +127,14 @@ class Sound(SoundInterface):
         sample = next(sample for sample in map(self.signal, signals) if sample)
         return sample
 
-    def play(self, async=False, **kwargs):
+    def play(self, is_async=False, **kwargs):
         self.current_sample = self._obtain_sample()
-        self.current_sample.play(self.duration_const, async=async)
+        self.current_sample.play(self.duration_const, is_async=async)
         self.running = True
 
-    def play_all(self, async=False):
+    def play_all(self, is_async=False):
         for sample in self.samples:
-            sample.play(self.duration_const, async=async)
+            sample.play(self.duration_const, is_async=async)
 
     def end(self):
         self.running = False
@@ -322,9 +322,9 @@ class PopeSound(Sound):
         self.sound.setup(path=path)
         self.delay = delay
 
-    def play(self, async=False):
+    def play(self, is_async=False):
         self.pope_start()
-        self.sound.play(async=False)  # TODO: fixme :3
+        self.sound.play(is_async=False)  # TODO: fixme :3
         self.pope_stop()
 
     def pope_start(self):

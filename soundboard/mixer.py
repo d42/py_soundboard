@@ -57,7 +57,7 @@ class RawSound():
         self.raw = chunk.chunk
         self.mixer = mixer
 
-    def play(self, duration_const=0, async=False):
+    def play(self, duration_const=0, is_async=False):
         self.mixer.play(self.raw)
-        if async: return
+        if is_async: return
         sleep((self.duration + duration_const) - settings.sound_sleep_offset)
