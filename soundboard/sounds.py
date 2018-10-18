@@ -1,5 +1,7 @@
 import os
 import random
+import glob
+import socket
 import logging
 import abc
 import re
@@ -7,17 +9,16 @@ from threading import Thread
 from time import time, sleep
 
 import six
-import arrow
 import requests
 from prometheus_client import Counter
 
-from soundboard.vox import voxify
-from soundboard import config
-from soundboard.mixer import SDLMixer
-from soundboard.types import sound_state
-from soundboard.client_api import JSONApi
-from soundboard.exceptions import SoundException, VoxException
-from soundboard import utils
+from .vox import voxify
+from . import config
+from .mixer import SDLMixer
+from .types import sound_state
+from .client_api import JSONApi
+from .exceptions import SoundException, VoxException
+from . import utils
 
 logger = logging.getLogger('sounds')
 
@@ -223,7 +224,6 @@ class WeatherSound(Sound):
         weather_url = weather_url or self.settings.weather_url
         interval = interval or self.settings.weather_interval
 
-        location = int(location_id)
         self.location_id = location_id
 
         self.api = JSONApi(weather_url,
@@ -318,6 +318,7 @@ class PopeSound(Sound):
     pope_rpm = 33
 
     def setup(self, path, pope_api, delay):
+        self.pope_api = pope_api
         self.sound = SimpleSound(mixer=self.mixer, base_dir=self.dir)
         self.sound.setup(path=path)
         self.delay = delay
@@ -330,12 +331,12 @@ class PopeSound(Sound):
     def pope_start(self):
         def func():
             sleep(self.delay)
-            url = self.pope_api.format(op='start')
+            url = self.pope_api.format(op='on')
             requests.get(url)
         Thread(target=func).start()
 
     def pope_stop(self):
-        url = self.pope_api.format(op='stop')
+        url = self.pope_api.format(op='off')
         requests.get(url)
 
     def handle_prometheus(self, board_name):
@@ -343,16 +344,57 @@ class PopeSound(Sound):
         self.pope_counter.inc(amount=(rotation_time/60) * self.pope_rpm)
 
 
+@config.state.sounds.register
+class Movie(Sound):
+    name = 'movie'
+
+    def setup(self, path, destination):
+        full_path = os.path.join(self.dir, path)
+        if not os.path.exists(full_path):
+            raise ValueError("Path %s does not exist" % path)
+        self.file_path = full_path
+        self.destination = destination
+
+    def play(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            host, port = self.destination.split(':')
+            s.connect((host, int(port)))
+            with open(self.file_path, 'rb') as file:
+                s.sendfile(file)
+
+
+@config.state.sounds.register
+class MovieRoulette(Sound):
+    name = 'movieroulette'
+
+    def setup(self, path, destination):
+        full_path = os.path.join(self.dir, path)
+        if not os.path.exists(full_path):
+            raise ValueError("Path %s does not exist" % path)
+        self.files_path = full_path
+        self.destination = destination
+
+    def play(self):
+        files = glob.glob(os.path.join(self.files_path, '*'))
+        file_path = random.choice(files)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            host, port = self.destination.split(':')
+            s.connect((host, int(port)))
+            with open(file_path, 'rb') as file:
+                s.sendfile(file)
+
+
 class SoundSet(object):
 
     def __init__(self, config=None, mixer=SDLMixer):
 
-        self.mixer = mixer
+        self.mixer = mixer() if isinstance(mixer, type) else mixer
         self.startup_sound = None
 
         self.busy_time = time()
         self.combinations = {}
         self.sounds = {}
+        self.dank_sounds = set()
         if config:
             self.load_config(config)
 
@@ -371,7 +413,7 @@ class SoundSet(object):
     @classmethod
     def from_yaml(cls, yaml_path, settings, *args, **kwargs):
         cfg = config.YAMLConfig(yaml_path, settings=config.settings)
-        return cls(cfg, *args, **kwargs)
+        return cls(config=cfg, *args, **kwargs)
 
     def _load_sounds(self, config):
         startup_entry = config.get('startup', {}).get('sound')
@@ -383,11 +425,14 @@ class SoundSet(object):
 
             keys = soundentry['keys']
             name = soundentry['name']
+            dank = soundentry['dank']
             self.combinations[keys] = sound
             if name in self.sounds:
                 raise ValueError("%s sound %s already defined",
                                  self.name, name)
             self.sounds[name] = sound
+            if dank:
+                self.dank_sounds.add(sound)
 
     def _create_sound(self, sound_cfg):
         sound = self.sounds_factory.by_name(sound_cfg['type'])
@@ -407,7 +452,8 @@ class SoundSet(object):
                 return k
         raise ValueError("Sound not found")
 
-    def play(self, buttons, prometheus=False):
+    def play(self, buttons, prometheus=False, board_state=None):
+        board_state = board_state or dict()
         if not buttons:
             return
 
@@ -415,6 +461,10 @@ class SoundSet(object):
         sound = self.combinations.get(buttons)
         if not sound:
             return
+
+        if sound in self.dank_sounds and not board_state.get('allow_dank_memes'):
+            sound = self.sounds_factory.by_name('vox')
+            sound.setup('access denied')
 
         sound.play()
         if not prometheus:

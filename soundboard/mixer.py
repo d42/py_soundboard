@@ -1,19 +1,20 @@
 import wave
 from time import sleep
-from collections import deque, namedtuple
+from collections import namedtuple
 
 
 from sdl2 import sdlmixer
 
 from soundboard.utils import init_sdl
 from .config import settings
+from .utils import Singleton
 
 chunk_tuple = namedtuple('chunk_info', 'chunk duration')
 
 
-class SDLMixer():
+class SDLMixer(metaclass=Singleton):
 
-    def __init__(self, channel=0):
+    def __init__(self):
         super(SDLMixer, self).__init__()
         init_sdl()
         self.chunks = {}
@@ -37,8 +38,8 @@ class SDLMixer():
 
 class NOPMixer(SDLMixer):
 
-    def __init__(self, channel=0):
-        super(NOPMixer, self).__init__(channel)
+    def __init__(self, *args, **kwargs):
+        super(NOPMixer, self).__init__(*args, **kwargs)
         self.played = []
 
     def play(self, sound):

@@ -8,7 +8,7 @@ import requests
 import requests.exceptions
 
 from soundboard.types import api_state
-from soundboard.config import state, settings
+from soundboard.config import state
 
 logger = logging.getLogger('api')
 instances = {}

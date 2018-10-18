@@ -113,7 +113,19 @@ class RawEVDEVJoystick(BaseRawJoystick):
 
     def __init__(self, device_path, mapping=None, offset=0):
         super(RawEVDEVJoystick, self).__init__(mapping, offset)
-        self.joystick = evdev.InputDevice(device_path)
+        if 'input/event' not in device_path:
+            self.joystick = self.device_from_name(device_path)
+        else:
+            self.joystick = evdev.InputDevice(device_path)
+
+
+    def device_from_name(self, device_name):
+        for path in evdev.list_devices():
+            dev = evdev.InputDevice(path)
+            if dev.name == device_name:
+                return dev
+        raise ValueError("unknown device %s" % device_name)
+
 
     def _read(self):
         try:
