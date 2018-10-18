@@ -64,10 +64,6 @@ class SoundInterface():
     def name(self):
         pass
 
-    # @abc.abstractproperty
-    # def config_sounds_attribute(self):
-    #     pass
-
     @abc.abstractmethod
     def setup(self, *args, **kwargs):
         pass
@@ -130,12 +126,12 @@ class Sound(SoundInterface):
 
     def play(self, is_async=False, **kwargs):
         self.current_sample = self._obtain_sample()
-        self.current_sample.play(self.duration_const, is_async=async)
+        self.current_sample.play(self.duration_const, is_async=is_async)
         self.running = True
 
     def play_all(self, is_async=False):
         for sample in self.samples:
-            sample.play(self.duration_const, is_async=async)
+            sample.play(self.duration_const, is_async=is_async)
 
     def end(self):
         self.running = False
@@ -407,7 +403,7 @@ class SoundSet(object):
         self.sounds_factory = SoundFactory(self.mixer, config['wav_directory'])
         self.name = config['name']
         self.keys = config['keys']
-        self.modifiers = config['modifiers']
+        self.modifiers = config.get('modifiers', list())
         self._load_sounds(config)
 
     @classmethod

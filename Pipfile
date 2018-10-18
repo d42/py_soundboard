@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+argumentize = {editable = true, git = "https://github.com/d42/argumentize"}
+flask = "*"
+flask-restful = "*"
+prometheus-client = "*"
+pyyaml = "*"
+requests = "*"
+pytest = "*"
+python-dateutil = "*"
+"pysdl2" = "*"
+paho-mqtt = "*"
+
+[dev-packages]
+evdev = "*"
+neovim = "*"
+pytest-httpbin = "*"
+pudb = "*"
+
+[requires]
+python_version = "3.7"
+
+[scripts]
+start = 'python main.py'

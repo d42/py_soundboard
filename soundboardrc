@@ -1,0 +1,4 @@
+wav_directory: ~/soundboard/files
+yaml_directory: ~/soundboard/yaml
+debug: True
+mqtt: False

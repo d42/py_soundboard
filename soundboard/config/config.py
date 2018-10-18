@@ -16,8 +16,8 @@ class Settings(Argumentize):
                         enumerate([8, 7, 6, 5, 1, 2, 3, 4, 9, 10, 11, 0])}
     buttons_count = len(physical_mapping)
 
-    wav_directory = OptionStr(os.path.expanduser("~/soundboard/files"))
-    yaml_directory = os.path.expanduser("~/soundboard/yaml")
+    wav_directory = OptionStr(required=True, fmt=os.path.expanduser)
+    yaml_directory = OptionStr(required=True, fmt=os.path.expanduser)
     debug = OptionBool(False)
     input_type = OptionStr('evdev')
     device_path = OptionStr('/dev/input/event0')

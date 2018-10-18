@@ -90,7 +90,6 @@ class Board():
         server, channel = path.split('/', 1)
 
         def on_connect(client, userdata, flags, rc):
-            print("bebin")
             client.subscribe(channel)
 
         def on_message(client, userdata, msg):

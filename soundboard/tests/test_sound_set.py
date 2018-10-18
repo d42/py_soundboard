@@ -3,7 +3,7 @@ from soundboard.sounds import SoundSet, SoundInterface
 test_config = {
     'name': 'default',
     'keys': frozenset([2, 3]),
-    'wav_directory': 'sounds/',
+    'wav_directory': 'tests/testboard/sounds/',
     'delay constant': 0,
     'delay multiplier': 0,
     'sounds': [
