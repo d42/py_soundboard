@@ -5,8 +5,8 @@ from sdl2 import sdlmixer
 
 class NOPMixer(SDLMixer):
 
-    def __init__(self, channel=0):
-        super(NOPMixer, self).__init__(channel)
+    def __init__(self):
+        super(NOPMixer, self).__init__()
         self.played = []
 
     def play(self, chunk):
@@ -16,7 +16,7 @@ class NOPMixer(SDLMixer):
         sdlmixer.Mix_HaltChannel(-1)
 
 
-class TestSound(Sound):
+class MockSound(Sound):
     name = 'testtype'
     config_sounds_attribute = 'testinput'
 

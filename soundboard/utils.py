@@ -24,7 +24,7 @@ def init_sdl():
 
 
 def read_func_attributes(func):
-    spec = inspect.getargspec(func)
+    spec = inspect.getfullargspec(func)
     args = {arg: None for arg in spec.args}
     if spec.defaults:
         defaults = {k: v for k, v in zip(reversed(spec.args), spec.defaults)}

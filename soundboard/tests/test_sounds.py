@@ -10,7 +10,7 @@ from soundboard.client_api import ApiManager
 
 @pytest.fixture
 def factory():
-    return sounds.SoundFactory(NOPMixer, 'sounds/')
+    return sounds.SoundFactory(NOPMixer, 'soundboard/tests/testboard/files/')
 
 
 class MockRequest:
@@ -34,13 +34,13 @@ def test_sounds(monkeypatch, factory):
     simple = factory.simple("test/test.wav")
     simple.play()
 
-    vox = factory.vox("test")
+    vox = factory.vox("alpha")
     vox.play()
 
     list = factory.list(["test/test2.wav", "test/test3.wav"])
     list.play()
     list.end()
-    random = factory.random(["test/test.wav", "test/test3.wav"])
+    random = factory.random(["test/test2.wav", "test/test3.wav"])
     random.play()
     monkeypatch.setattr('requests.get', lambda *args, **kwargs: MockRequest())
     weather = factory.weather("europe,warsaw")

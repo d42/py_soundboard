@@ -3,7 +3,7 @@ from soundboard.sounds import SoundSet, SoundInterface
 test_config = {
     'name': 'default',
     'keys': frozenset([2, 3]),
-    'wav_directory': 'tests/testboard/sounds/',
+    'wav_directory': 'soundboard/tests/testboard/files/',
     'delay constant': 0,
     'delay multiplier': 0,
     'sounds': [
@@ -23,7 +23,7 @@ test_config = {
             'name': 'vox test',
             'keys': frozenset([2]),
             'type': 'vox',
-            'attributes': {'sentence': 'test test'},
+            'attributes': {'sentence': 'bravo alpha'},
         },
     ]
 

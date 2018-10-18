@@ -94,7 +94,7 @@ class Sound(SoundInterface):
         try:
             self.samples = [self.mixer.read(p) for p in paths]
         except FileNotFoundError as e:
-            raise SoundException(e.strerror, e.filename)
+            raise SoundException(e.strerror, e.filename) from e
 
     @staticmethod
     def on_next(samples, state):
@@ -202,7 +202,7 @@ class VoxSound(Sound):
             super(VoxSound, self).setup(voxify(sentence.lower()),
                                         duration_const=self.vox_duration_const)
         except SoundException as e:
-            raise VoxException(e.msg, e.filename, sentence)
+            raise VoxException(e.msg, e.filename, sentence) from e
 
     def play(self):
         super(VoxSound, self).play_all()
@@ -421,7 +421,7 @@ class SoundSet(object):
 
             keys = soundentry['keys']
             name = soundentry['name']
-            dank = soundentry['dank']
+            dank = soundentry.get('dank', False)
             self.combinations[keys] = sound
             if name in self.sounds:
                 raise ValueError("%s sound %s already defined",

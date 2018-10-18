@@ -3,13 +3,13 @@ import pytest
 
 from ..schema import SoundSet
 from ..config import settings, State
-from .mocks import TestSound
+from .mocks import MockSound
 
 
 @pytest.fixture
 def sound_set():
     s = State()
-    s.sounds.register(TestSound)
+    s.sounds.register(MockSound)
     ss = SoundSet()
     ss.context = dict(settings=settings, sounds=s.sounds)
     return ss
