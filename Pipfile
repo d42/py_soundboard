@@ -20,6 +20,7 @@ evdev = "*"
 neovim = "*"
 pytest-httpbin = "*"
 pudb = "*"
+pytest-pudb = "*"
 
 [requires]
 python_version = "3.7"
