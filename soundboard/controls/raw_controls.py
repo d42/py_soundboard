@@ -113,11 +113,16 @@ class RawEVDEVJoystick(BaseRawJoystick):
 
     def __init__(self, device_path, mapping=None, offset=0):
         super(RawEVDEVJoystick, self).__init__(mapping, offset)
-        if 'input/event' not in device_path:
-            self.joystick = self.device_from_name(device_path)
-        else:
-            self.joystick = evdev.InputDevice(device_path)
+        self.device_path = device_path
+        self.setup_device(self.device_path)
 
+    def setup_device(self, device_path):
+        is_name = 'input/event' not in device_path
+        func = self.device_from_name if is_name else evdev.InputDevice
+        try:
+            self.joystick = func(device_path)
+        except Exception as e:
+            logger.warning(e)
 
     def device_from_name(self, device_name):
         for path in evdev.list_devices():
@@ -129,10 +134,12 @@ class RawEVDEVJoystick(BaseRawJoystick):
 
     def _read(self):
         try:
-            ebin = list(self.joystick.read())
+            return list(self.joystick.read())
+        except OSError:
+            self.setup_device(self.device_path)
+            return []
         except:
             return []
-        return ebin
 
     def update(self):
         def to_tuple(event):
