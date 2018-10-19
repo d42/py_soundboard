@@ -125,6 +125,8 @@ class Sound(SoundInterface):
         return sample
 
     def play(self, is_async=False, **kwargs):
+
+        logger.info("playing %s", self.name)
         self.current_sample = self._obtain_sample()
         self.current_sample.play(self.duration_const, is_async=is_async)
         self.running = True
