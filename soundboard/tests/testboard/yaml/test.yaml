@@ -1,0 +1,20 @@
+name: Test Board
+wav_directory: tests/testboard/files/
+delay_constant: 0
+keys: [2,3,4]
+delay_multiplier: 0.5
+sounds:
+    - name: whip
+      keys: [0]
+      type: simple
+      path: test.wav
+
+    - name: random whip
+      keys: [1]
+      type: random
+      paths: [test2.wav, test3.wav]
+
+    - name: vox test
+      keys: [2]
+      type: vox
+      sentence: alpha bravo
