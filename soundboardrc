@@ -1,4 +1,6 @@
 wav_directory: ~/soundboard/files
 yaml_directory: ~/soundboard/yaml
-debug: True
-mqtt: False
+debug: true
+mqtt: true
+prometheus: false
+device_path: obdev.at Soundboard
