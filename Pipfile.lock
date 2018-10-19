@@ -1,12 +1,10 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d4964e9137d26bf91f6cfae1b6278159c6ed712ac0b6bf51d9c0cb697e9747b8"
+            "sha256": "eab08a5175e431782f6d8d2eb8ea1bcfa82a0807aebbc411997ef936b914581c"
         },
         "pipfile-spec": 6,
-        "requires": {
-            "python_version": "3.7"
-        },
+        "requires": {},
         "sources": [
             {
                 "name": "pypi",
@@ -26,7 +24,7 @@
         "argumentize": {
             "editable": true,
             "git": "https://github.com/d42/argumentize",
-            "ref": "7914c471ec9eb0d0b3866e2629267884a92acd88"
+            "ref": "b9da1ecdbe271d2cec46c08dd265ceb5eece0bd0"
         },
         "atomicwrites": {
             "hashes": [
@@ -62,6 +60,13 @@
                 "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
             ],
             "version": "==7.0"
+        },
+        "evdev": {
+            "hashes": [
+                "sha256:2dd67291be20e70643e8ef6f2381efc10e0c6e44a32abb3c1db74996ea3b0351"
+            ],
+            "index": "pypi",
+            "version": "==1.1.2"
         },
         "flask": {
             "hashes": [
@@ -324,13 +329,6 @@
                 "sha256:c39efa13fbdeb4506c476c9b3babf6a718da943dab7811c206005a4a956c080c"
             ],
             "version": "==4.3.0"
-        },
-        "evdev": {
-            "hashes": [
-                "sha256:2dd67291be20e70643e8ef6f2381efc10e0c6e44a32abb3c1db74996ea3b0351"
-            ],
-            "index": "pypi",
-            "version": "==1.1.2"
         },
         "flask": {
             "hashes": [

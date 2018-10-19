@@ -14,9 +14,9 @@ pytest = "*"
 python-dateutil = "*"
 "pysdl2" = "*"
 paho-mqtt = "*"
+evdev = "*"
 
 [dev-packages]
-evdev = "*"
 neovim = "*"
 pytest-httpbin = "*"
 pudb = "*"
