@@ -37,6 +37,11 @@ class Doorbell(Resource):
         sound = sound_set['doorbell']
         sound.play(is_async=True)
 
+@api.resource('/remote-input/<int:btn>/<int:state>', endpoint='remote')
+class Remote(Resource):
+    def post(self, btn, state):
+        current_app.queue.put((btn, state))
+
 
 @api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
 class Play(Resource):
@@ -56,6 +61,7 @@ class FlaskApp:
 
         self.app = Flask(__name__)
         self.app.board = board
+        self.app.queue = self.queue
         self.api = api.init_app(self.app)
 
     def run(self, *args, **kwargs):

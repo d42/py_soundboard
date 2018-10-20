@@ -66,8 +66,10 @@ class RawQueueJoystick(BaseRawJoystick):
 
     def update(self):
         pushed = set()
+        logging.info("updating")
         while not self.queue.empty():
-            button_id = self.queue.get_nowait()
+            button_id, state = self.queue.get_nowait()
+            logging.info("%s %s", button_id, state)
             if button_id in pushed: continue
             pushed.add(button_id)
             self.events.append(event_tuple(button_id, EventTypes.push))
