@@ -134,7 +134,6 @@ class Board():
         while self.running:
             if not is_active and self.settings.mqtt:
                 self.poll_mqtt()
-            time.sleep(1/100)
             buttons = self.control.poll_buffered(buffers[is_active])
             if not any(buttons):
                 is_active = False
