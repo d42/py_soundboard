@@ -26,4 +26,4 @@ staticx = {editable = true, git = "https://github.com/d42/staticx.git"}
 
 [scripts]
 start = 'python main.py'
-pack = "sh -c 'pyinstaller soundboard.spec; staticx dist/soundboard dist/soundboard.static'"
+pack = "sh -c 'rm -r dist/ build/; pyinstaller soundboard.spec; staticx dist/soundboard dist/soundboard.static'"
