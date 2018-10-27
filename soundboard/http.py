@@ -2,6 +2,7 @@ from threading import Thread
 from six.moves.queue import Queue
 from flask import Flask, current_app, g
 from flask_restful import Api, Resource
+from werkzeug.serving import WSGIRequestHandler
 
 api = Api()
 
@@ -65,6 +66,7 @@ class FlaskApp:
         self.api = api.init_app(self.app)
 
     def run(self, *args, **kwargs):
+        WSGIRequestHandler.protocol_version = "HTTP/1.1"
         self.app.run(*args, **kwargs)
 
 
