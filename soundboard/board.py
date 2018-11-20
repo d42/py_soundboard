@@ -22,7 +22,10 @@ class Board():
         '''
         self.settings = settings
         self.mixer = SDLMixer()
-        self.sound_factory = SoundFactory(mixer=self.mixer, directory=settings['wav_directory'])
+        self.sound_factory = SoundFactory(
+            mixer=self.mixer,
+            directory=settings['wav_directory']
+        )
         self._dankness = False
 
         self.api_manager = ApiManager()
@@ -69,7 +72,11 @@ class Board():
         if all([yamlfile, sound_set]) or not any([sound_set, yamlfile]):
             raise ValueError("provide SoundSet instance or yaml file path")
         if yamlfile and not sound_set:
-            sound_set = SoundSet.from_yaml(yamlfile, settings=self.settings, mixer=self.mixer)
+            sound_set = SoundSet.from_yaml(
+                yamlfile,
+                settings=self.settings,
+                mixer=self.mixer
+            )
 
         if ModifierTypes.floating not in sound_set.modifiers:
             self.register_on_keys(sound_set, sound_set.keys)
