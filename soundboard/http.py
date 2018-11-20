@@ -1,6 +1,6 @@
 from threading import Thread
 from six.moves.queue import Queue
-from flask import Flask, current_app, g
+from flask import Flask, current_app, g, make_response
 from flask_restful import Api, Resource
 
 api = Api()
@@ -28,6 +28,7 @@ class SoundSet(Resource):
 class Remote(Resource):
     def post(self, btn, state):
         current_app.queue.put((btn, state))
+        return make_response(('', 200, ()))
 
 
 @api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
