@@ -62,6 +62,7 @@ class RawQueueJoystick(BaseRawJoystick):
         ''':type queue: Queue.Queue'''
         super(RawQueueJoystick, self).__init__(mapping, offset)
         self.queue = queue
+        self.keys_held = dict()
 
     def update(self):
         logging.info("updating")
@@ -70,7 +71,19 @@ class RawQueueJoystick(BaseRawJoystick):
             event = EventTypes(event_id)
             logging.info("%s %s", button_id, event)
             self.events.append(event_tuple(button_id, event))
+            if event == EventTypes.push:
+                self.keys_held[button_id] = time.time()
+        self.reset_stale()
 
+    def reset_stale(self):
+        for btn_id, timestamp in self.keys_held.items():
+            if not timestamp:
+                continue
+            if (time.time() - timestamp) < 30:
+                continue
+            event = event_tuple(btn_id, EventTypes.release)
+            self.events.append(event)
+            self.keys_held[btn_id] = False
 
 class RawSDLJoystick(BaseRawJoystick):
     JOYSTICK_EVENTS = (sdl2.SDL_JOYBUTTONUP, sdl2.SDL_JOYBUTTONDOWN)
