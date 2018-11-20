@@ -9,6 +9,7 @@ from .controls import ControlHandler
 from .client_api import ApiManager
 from .sounds import SoundSet, SoundFactory
 from .mixer import SDLMixer
+from .mqtt import MQTT
 
 logger = logging.getLogger('board')
 
@@ -22,6 +23,7 @@ class Board():
         self.settings = settings
         self.mixer = SDLMixer()
         self.sound_factory = SoundFactory(mixer=self.mixer, directory=settings['wav_directory'])
+        self._dankness = False
 
         self.api_manager = ApiManager()
         self.combinations = {}
@@ -31,7 +33,33 @@ class Board():
         self.active_sound_set = None
         self.board_state = {'allow_dank_memes': False}
         if self.settings.mqtt:
-            self.setup_mqtt(self.settings.mqtt_path)
+            self._setup_mqtt()
+
+    def _setup_mqtt(self):
+        def mqtt_dankness(topic, payload):
+            allow = {b'safe': False, b'engaged': True}[payload]
+            self.dankness = allow
+
+        self.mqtt_client = MQTT(
+            path=self.settings.mqtt_path,
+            login=self.settings.mqtt_login,
+            password=self.settings.mqtt_password,
+        )
+
+        self.mqtt_client.add_topic_handler('hswaw/dank/state', mqtt_dankness)
+
+    @property
+    def dankness(self):
+        return self.board_state['allow_dank_memes']
+
+    @dankness.setter
+    def dankness(self, new_dankness):
+        if self.dankness == new_dankness:
+            return
+        self.board_state['allow_dank_memes'] = new_dankness
+        mode = 'engaged' if new_dankness else 'disengaged'
+        sound = self.sound_factory.vox('may may mode %s' % mode)
+        sound.play()
 
     def register_joystick(self, joystick):
         """:type joystick: soundboard.controls.Joystick"""
@@ -84,43 +112,6 @@ class Board():
         for sound_set in self.combinations.values():
             sound_set.stop(released)
 
-    def setup_mqtt(self, path):
-        import paho.mqtt.client as mqtt
-
-        server, channel = path.split('/', 1)
-
-        def on_connect(client, userdata, flags, rc):
-            client.subscribe(channel)
-
-        def on_message(client, userdata, msg):
-            print(msg.topic, msg.payload)
-            if msg.topic == 'hswaw/dank/state':
-                allow = {b'safe': False, b'engaged': True}[msg.payload]
-                if allow == self.board_state['allow_dank_memes']:
-                    return
-                mode = 'engaged' if allow else 'disengaged'
-                sound = self.sound_factory.vox('may may mode %s' % mode)
-                sound.play()
-                self.board_state['allow_dank_memes'] = allow
-                print(self.board_state)
-
-        def on_log(client, userdata, level, buf):
-            print(client, userdata, level, buf)
-
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_client.username_pw_set('public', 'public')
-        self.mqtt_client.on_connect = on_connect
-        self.mqtt_client.on_log = on_log
-        self.mqtt_client.on_message = on_message
-        self.mqtt_client.connect(server, 1883, 60)
-
-    def poll_mqtt(self):
-        ret_val = self.mqtt_client.loop(timeout=1.0)
-        if ret_val:
-            print("mqtt failure: %d" % ret_val)
-            server, channel = self.settings.mqtt_path.split('/', 1)
-            self.mqtt_client.connect(server, 1883, 60)
-
     def run(self):
         self.running = True
         self.api_manager.start()
@@ -132,8 +123,6 @@ class Board():
         is_active = False
 
         while self.running:
-            if not is_active and self.settings.mqtt:
-                self.poll_mqtt()
             buttons = self.control.poll_buffered(buffers[is_active])
             if not any(buttons):
                 is_active = False
