@@ -138,4 +138,4 @@ class Board():
             is_active = True
             self.on_buttons(buttons)
 
-        self.api_manager.stop()
+        self.api_manager._stop()
