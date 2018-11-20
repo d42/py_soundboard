@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import logging
+from queue import Queue
 
 from prometheus_client import start_http_server
 
@@ -37,8 +38,17 @@ def main():
                         offset=settings.scancode_offset)
 
     b.register_joystick(joystick)
-    http_joystick = Joystick(http.queue, backend='queue')
-    b.register_joystick(http_joystick)
+
+    mqtt_queue = Queue()
+    mqtt_joystick = Joystick(mqtt_queue, backend='queue')
+
+    def joystick_cb(topic, msg):
+        btn, _, state = msg.partition(b'=')
+        joystick_data = int(btn), int(state)
+        mqtt_queue.put(joystick_data)
+
+    b.register_joystick(mqtt_joystick)
+    b.mqtt_client.add_topic_handler('hswaw/soundboard/state', joystick_cb)
     b.run()
 
 
