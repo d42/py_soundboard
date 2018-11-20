@@ -145,7 +145,7 @@ class RawEVDEVJoystick(BaseRawJoystick):
         events = [e for e in self._read() if e.type in self.JOYSTICK_EVENTS]
         self.process(events, to_tuple)
 
-handlers = {
+HANDLERS = {
     'sdl': RawSDLJoystick,
     'evdev': RawEVDEVJoystick,
     'queue': RawQueueJoystick,

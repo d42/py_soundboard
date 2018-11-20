@@ -9,7 +9,7 @@ from soundboard.enums import EventTypes
 from soundboard.types import states_tuple
 from soundboard.exceptions import ControllerException
 
-from .raw_controls import handlers
+from .raw_controls import HANDLERS
 
 logger = logging.getLogger('controls')
 
@@ -28,9 +28,8 @@ class Joystick():
 
     @staticmethod
     def open_joystick(joystick_id, backend, mapping, offset):
-        if isinstance(backend, str) and backend in handlers:
-            backend = handlers[backend]
-        else:
+        backend = HANDLERS.get(backend)
+        if not backend:
             ControllerException("unknown type %s" % backend)
         return backend(joystick_id, mapping=mapping, offset=offset)
 
