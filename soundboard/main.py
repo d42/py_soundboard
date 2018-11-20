@@ -20,7 +20,6 @@ def main():
     if '--debug' in sys.argv:
         logging.basicConfig(level=logging.DEBUG)
 
-    logger = logging.getLogger()
     settings.from_files(cfg='yaml', verbose=True)
     settings.from_args(sys.argv[1:])
     if settings.prometheus:

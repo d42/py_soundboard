@@ -14,13 +14,12 @@ from soundboard.enums import EventTypes
 logger = logging.getLogger('controls.raw')
 
 
-class BaseRawJoystick(object):
+class BaseRawJoystick():
 
     def __init__(self, mapping=None, offset=0):
         self.mapping = mapping if mapping else dict()
         self.scancode_offset = offset
         self.events = list()
-        self.pushed = set()
 
     @property
     def isempty(self):
@@ -65,7 +64,6 @@ class RawQueueJoystick(BaseRawJoystick):
         self.queue = queue
 
     def update(self):
-        pushed = set()
         logging.info("updating")
         while not self.queue.empty():
             button_id, event_id = self.queue.get_nowait()
@@ -104,7 +102,7 @@ class RawSDLJoystick(BaseRawJoystick):
 
 
 class RawEVDEVJoystick(BaseRawJoystick):
-    JOYSTICK_EVENTS = [evdev.ecodes.EV_KEY]
+    JOYSTICK_EVENTS = [evdev.ecodes.EV_KEY]  # noqa
 
     def __init__(self, device_path, mapping=None, offset=0):
         super(RawEVDEVJoystick, self).__init__(mapping, offset)
@@ -125,7 +123,6 @@ class RawEVDEVJoystick(BaseRawJoystick):
             if dev.name == device_name:
                 return dev
         raise ValueError("unknown device %s" % device_name)
-
 
     def _read(self):
         try:

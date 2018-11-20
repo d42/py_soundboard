@@ -56,7 +56,10 @@ class ControlHandler():
         return any(j.pending for j in self.controllers)
 
     def poll_raw(self):
-        return list(chain.from_iterable(c.poll_raw() for c in self.controllers))
+        return list(
+            chain.from_iterable(c.poll_raw()
+            for c in self.controllers)
+        )
 
     def poll_buffered(self, buffer_time):
         events = self.poll_raw()

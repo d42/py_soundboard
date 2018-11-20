@@ -2,7 +2,6 @@ from threading import Thread
 from six.moves.queue import Queue
 from flask import Flask, current_app, g
 from flask_restful import Api, Resource
-from werkzeug.serving import WSGIRequestHandler
 
 api = Api()
 
@@ -24,19 +23,6 @@ class SoundSet(Resource):
 
         return {'sounds': [s.name for s in sound_set.sounds.values()]}
 
-
-# @api.resource('/stats')
-# class Stats(Resource)
-
-@api.resource('/doorbell', endpoint='doorbell')
-class Doorbell(Resource):
-    def post(self):
-        board = current_app.board
-        sound_set = board.shared_online.get('special')
-        if not sound_set:
-            return
-        sound = sound_set['doorbell']
-        sound.play(is_async=True)
 
 @api.resource('/remote-input/<int:btn>/<int:state>', endpoint='remote')
 class Remote(Resource):
@@ -66,7 +52,6 @@ class FlaskApp:
         self.api = api.init_app(self.app)
 
     def run(self, *args, **kwargs):
-        WSGIRequestHandler.protocol_version = "HTTP/1.1"
         self.app.run(*args, **kwargs)
 
 
