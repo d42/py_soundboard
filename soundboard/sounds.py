@@ -162,7 +162,7 @@ class RandomSound(Sound):
     name = 'random'
 
     @staticmethod
-    def on_next(samples, state):
+    def on_start(samples, state):
         return random.choice(samples)
 
 
