@@ -63,6 +63,7 @@ class RawQueueJoystick(BaseRawJoystick):
         super(RawQueueJoystick, self).__init__(mapping, offset)
         self.queue = queue
         self.keys_held = dict()
+        self.last_key_at = 0
 
     def update(self):
         while not self.queue.empty():
@@ -71,14 +72,20 @@ class RawQueueJoystick(BaseRawJoystick):
             logging.info("%s %s", button_id, event)
             self.events.append(event_tuple(button_id, event))
             if event == EventTypes.push:
-                self.keys_held[button_id] = time.time()
+                timestamp = time.time()
+                self.keys_held[button_id] = timestamp
+                self.last_key_at = timestamp
+
         self.reset_stale()
 
     def reset_stale(self):
+        if not self.last_key_at:
+            return
+        if time.time() - self.last_key_at < 30:
+            return
+
         for btn_id, timestamp in self.keys_held.items():
             if not timestamp:
-                continue
-            if (time.time() - timestamp) < 30:
                 continue
             event = event_tuple(btn_id, EventTypes.release)
             self.events.append(event)
