@@ -393,6 +393,7 @@ class SoundSet(object):
         self.combinations = {}
         self.sounds = {}
         self.dank_sounds = set()
+        self.async_sounds = set()
         if config:
             self.load_config(config)
 
@@ -423,7 +424,8 @@ class SoundSet(object):
 
             keys = soundentry['keys']
             name = soundentry['name']
-            dank = soundentry.get('dank', False)
+            dank = soundentry['dank']
+            is_async = soundentry['is_async']
             self.combinations[keys] = sound
             if name in self.sounds:
                 raise ValueError("%s sound %s already defined",
@@ -432,6 +434,8 @@ class SoundSet(object):
             if dank:
                 self.dank_sounds.add(sound)
 
+            if is_async:
+                self.async_sounds.add(sound)
     def _create_sound(self, sound_cfg):
         sound = self.sounds_factory.by_name(sound_cfg['type'])
         attributes = sound_cfg['attributes']
@@ -464,7 +468,10 @@ class SoundSet(object):
             sound = self.sounds_factory.by_name('vox')
             sound.setup('access denied')
 
-        sound.play()
+        if sound in self.async_sounds:
+            sound.play(is_async=True)
+        else:
+            sound.play()
         if not prometheus:
             return
 
