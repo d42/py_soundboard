@@ -121,7 +121,10 @@ class Sound(SoundInterface):
 
     def _obtain_sample(self):  # sup :3
         signals = ['start', 'next'][1 if self.running else 0:]
-        sample = next(sample for sample in map(self.signal, signals) if sample)
+        sample = next(
+            sample for sample
+            in map(self.signal, signals) if sample
+        )
         return sample
 
     def play(self, is_async=False, **kwargs):
@@ -436,6 +439,7 @@ class SoundSet(object):
 
             if is_async:
                 self.async_sounds.add(sound)
+
     def _create_sound(self, sound_cfg):
         sound = self.sounds_factory.by_name(sound_cfg['type'])
         attributes = sound_cfg['attributes']
