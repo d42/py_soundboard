@@ -65,7 +65,6 @@ class RawQueueJoystick(BaseRawJoystick):
         self.keys_held = dict()
 
     def update(self):
-        logging.info("updating")
         while not self.queue.empty():
             button_id, event_id = self.queue.get_nowait()
             event = EventTypes(event_id)
@@ -86,7 +85,11 @@ class RawQueueJoystick(BaseRawJoystick):
             self.keys_held[btn_id] = False
 
 class RawSDLJoystick(BaseRawJoystick):
-    JOYSTICK_EVENTS = (sdl2.SDL_JOYBUTTONUP, sdl2.SDL_JOYBUTTONDOWN)
+
+    @property
+    def JOYSTICK_EVENTS(self):
+        return (sdl2.SDL_JOYBUTTONUP, sdl2.SDL_JOYBUTTONDOWN)
+
 
     def __init__(self, joystick_id, mapping=None, offset=0):
         super(RawSDLJoystick, self).__init__(mapping, offset)
@@ -115,7 +118,10 @@ class RawSDLJoystick(BaseRawJoystick):
 
 
 class RawEVDEVJoystick(BaseRawJoystick):
-    JOYSTICK_EVENTS = [evdev.ecodes.EV_KEY]  # noqa
+
+    @property
+    def JOYSTICK_EVENTS(self):
+        return [evdev.ecodes.EV_KEY]  # noqa
 
     def __init__(self, device_path, mapping=None, offset=0):
         super(RawEVDEVJoystick, self).__init__(mapping, offset)
