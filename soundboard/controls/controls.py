@@ -62,27 +62,33 @@ class ControlHandler():
         )
 
     def poll_buffered(self, buffer_time):
-        events = self.poll_raw()
-        if events or self.held:
-            time.sleep(buffer_time)
-            events.extend(self.poll_raw())
-        return self.postprocess(events)
+        pushed = set()
+        released = set()
+        break_on = 0
 
-    def postprocess(self, events):  # TODO: this is cancer :3
+        for i in range(int(buffer_time/0.01)):
+            time.sleep(0.01)
+            events = self.poll_raw()
+            if not any([events, pushed, released]):
+                break
+            state = self.to_state(events)
+            released |= state.released
+            pushed |= state.pushed
+            if state.released:
+                if not break_on:
+                    break_on = i+4
+            if break_on and break_on == i:
+                break
 
-        pushed, released, held = self.to_states_sets(events)
-        self.held |= pushed
+        clicks = (pushed & released)
+        self.held |= (pushed - released)
         self.held -= released
+
         self.released |= released
+        released_now = self.released - pushed
+        self.released -= released_now
 
-        held |= self.held
-        pushed -= held
-
-        released |= self.released
-        released -= pushed
-        self.released -= released
-
-        return states_tuple(*map(frozenset, [pushed, released, held]))
+        return states_tuple(*map(frozenset, [clicks, released_now, self.held]))
 
     @staticmethod
     def to_states_sets(events):
@@ -94,3 +100,8 @@ class ControlHandler():
         released = containers[EventTypes.release]
         held = containers[EventTypes.hold]
         return pushed, released, held
+
+    @classmethod
+    def to_state(cls, events):
+        pushed, released, held = cls.to_states_sets(events)
+        return states_tuple(*map(frozenset, [pushed, released, held]))
