@@ -34,6 +34,10 @@ class MQTT:
     def _on_log(self, client, userdata, level, buf):
         print(client, userdata, level, buf)
 
+    def send(self, topic, message):
+        print("mqtt", topic, message)
+        self.mqtt_client.publish(topic, message)
+
     def _setup_mqtt(self):
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.username_pw_set(self.login, self.password)

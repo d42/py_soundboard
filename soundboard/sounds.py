@@ -28,20 +28,31 @@ sound_counter = Counter("soundboard_total", "", ['sound_set', 'sound_name'])
 class SoundFactory:
 
     def __init__(self, mixer, directory,
-                 state=config.state, settings=config.settings):
+                 state=config.state, settings=config.settings,
+                 mqtt_callback=None):
         """:type mixer: SDLMixer"""
         # https://stackoverflow.com/questions/529240/what-happened-to-types-classtype-in-python-3
         self.mixer = mixer() if isinstance(mixer, type) else mixer
         self.settings = settings
         self.state = state
         self.directory = directory
+        self.mqtt_callback = mqtt_callback
 
     def by_name(self, name):
         ":rtype: Sound"
         cls = self.state.sounds.by_name(name)
-        instance = cls(mixer=self.mixer, base_dir=self.directory)
+        instance = cls(mixer=self.mixer, base_dir=self.directory,
+                mqtt_callback=self.mqtt_callback)
         instance.settings = self.settings  # TODO: unuglify
         return instance
+
+    def new_dir(self, wav_directory):
+        return type(self)(
+            mixer=self.mixer,
+            directory=wav_directory,
+            state=self.state,
+            settings=self.settings,
+            mqtt_callback=self.mqtt_callback)
 
     def __getattr__(self, attr):
         def funky_wrapper(data):
@@ -76,13 +87,14 @@ class SoundInterface():
 class Sound(SoundInterface):
     running = False
 
-    def __init__(self, mixer, base_dir, data=None):
+    def __init__(self, mixer, base_dir, data=None, mqtt_callback=None):
         """:type mixer: SDLMixer"""
         self.mixer = mixer
         self.dir = base_dir
         self.name = "I'm so unnammed"
         self.current_sample = None
         self.duration_const = 0
+        self.mqtt_callback = mqtt_callback
 
         if data:
             self.setup(data)
@@ -363,6 +375,19 @@ class Movie(Sound):
             with open(self.file_path, 'rb') as file:
                 s.sendfile(file)
 
+@config.state.sounds.register
+class MQTT(Sound):
+    name = 'mqtt'
+    def setup(self, topic, message_on, message_off):
+        self.topic = topic
+        self.state = False
+        self.message_on = message_on
+        self.message_off = message_off
+
+    def play(self):
+        message = self.message_off if self.state else self.message_on
+        self.state = False if self.state else True
+        self.mqtt_callback(self.topic, message)
 
 @config.state.sounds.register
 class MovieRoulette(Sound):
@@ -387,9 +412,8 @@ class MovieRoulette(Sound):
 
 class SoundSet(object):
 
-    def __init__(self, config=None, mixer=SDLMixer):
+    def __init__(self, config=None, base_sound_factory=None):
 
-        self.mixer = mixer() if isinstance(mixer, type) else mixer
         self.startup_sound = None
 
         self.busy_time = time()
@@ -398,24 +422,26 @@ class SoundSet(object):
         self.dank_sounds = set()
         self.async_sounds = set()
         if config:
-            self.load_config(config)
+            self.load_config(config, base_sound_factory)
 
         logger.info("created board %s", self.name)
 
     def __getitem__(self, name):
         return self.sounds[name]
 
-    def load_config(self, config):
-        self.sounds_factory = SoundFactory(self.mixer, config['wav_directory'])
+    def load_config(self, config, base_sound_factory):
+        self.sounds_factory = base_sound_factory.new_dir(
+            config['wav_directory']
+        )
         self.name = config['name']
         self.keys = config['keys']
         self.modifiers = config.get('modifiers', list())
         self._load_sounds(config)
 
     @classmethod
-    def from_yaml(cls, yaml_path, settings, *args, **kwargs):
+    def from_yaml(cls, yaml_path, settings, base_sound_factory, *args, **kwargs):
         cfg = config.YAMLConfig(yaml_path, settings=config.settings)
-        return cls(config=cfg, *args, **kwargs)
+        return cls(config=cfg, base_sound_factory=base_sound_factory, *args, **kwargs)
 
     def _load_sounds(self, config):
         startup_entry = config.get('startup', {}).get('sound')

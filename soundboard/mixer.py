@@ -2,7 +2,6 @@ import wave
 from time import sleep
 from collections import namedtuple
 
-
 from sdl2 import sdlmixer
 
 from soundboard.utils import init_sdl

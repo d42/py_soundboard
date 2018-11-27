@@ -24,7 +24,8 @@ class Board():
         self.mixer = SDLMixer()
         self.sound_factory = SoundFactory(
             mixer=self.mixer,
-            directory=settings['wav_directory']
+            directory=settings['wav_directory'],
+            mqtt_callback=self.mqtt_send
         )
         self._dankness = False
 
@@ -51,6 +52,9 @@ class Board():
 
         self.mqtt_client.add_topic_handler('hswaw/dank/state', mqtt_dankness)
 
+    def mqtt_send(self, topic, message):
+        self.mqtt_client.send(topic, message)
+
     @property
     def dankness(self):
         return self.board_state['allow_dank_memes']
@@ -75,7 +79,7 @@ class Board():
             sound_set = SoundSet.from_yaml(
                 yamlfile,
                 settings=self.settings,
-                mixer=self.mixer
+                base_sound_factory=self.sound_factory
             )
 
         if ModifierTypes.floating not in sound_set.modifiers:
