@@ -15,6 +15,18 @@ python-versions = "*"
 version = "8.0.0"
 
 [[package]]
+category = "main"
+description = ""
+name = "argumentize"
+optional = false
+python-versions = "*"
+version = "0.1"
+
+[package.source]
+reference = "76e98d370ec6193ef54e0a155a674806e1bc118d"
+type = "git"
+url = "https://github.com/d42/argumentize"
+[[package]]
 category = "dev"
 description = "Atomic file writes."
 name = "atomicwrites"
@@ -412,6 +424,10 @@ optional = false
 python-versions = "*"
 version = "6.10.0"
 
+[package.dependencies]
+Flask = ">=0.8"
+blinker = ">=1.1"
+
 [[package]]
 category = "main"
 description = "Python HTTP for Humans."
@@ -490,12 +506,13 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "ca72b3322ef855cc51a70f6b8de16c01839346bf8c3eb0ac89ec224834ffdad0"
+content-hash = "222881979722460aeefe32e3c480b61efc827df932a36949d52ccdc772ee1633"
 python-versions = "^3.7"
 
 [metadata.hashes]
 altgraph = ["d6814989f242b2b43025cba7161fc1b8fb487a62cd49c49245d6fd01c18ac997", "ddf5320017147ba7b810198e0b6619bd7b5563aa034da388cea8546b877f9b0c"]
 aniso8601 = ["529dcb1f5f26ee0df6c0a1ee84b7b27197c3c50fc3a6321d66c544689237d072", "c033f63d028b9a58e3ab0c2c7d0532ab4bfa7452bfc788fbfe3ddabd327b181a"]
+argumentize = []
 atomicwrites = ["03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4", "75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"]
 attrs = ["08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c", "f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"]
 blinker = ["471aee25f3992bd325afa3772f1063dbdbbca947a041b8b89466dc00d606f8b6"]
