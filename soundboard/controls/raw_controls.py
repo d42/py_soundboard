@@ -152,7 +152,10 @@ class RawEVDEVJoystick(BaseRawJoystick):
     def _read(self):
         try:
             return list(self.joystick.read())
-        except OSError:
+        except BlockingIOError:
+            return []
+        except OSError as e:
+            logger.exception(e)
             self.setup_device(self.device_path)
             return []
         except Exception:
