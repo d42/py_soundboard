@@ -8,6 +8,7 @@ import socket
 from threading import Thread
 from time import sleep
 from time import time
+from typing import Type
 
 import requests
 from prometheus_client import Counter
@@ -29,7 +30,7 @@ sound_counter = Counter("soundboard_total", "", ["sound_set", "sound_name"])
 class SoundFactory:
     def __init__(
         self,
-        mixer: SDLMixer,
+        mixer: Type[SDLMixer],
         directory,
         state=config.state,
         settings=config.settings,
@@ -76,9 +77,14 @@ class SoundMeta(abc.ABCMeta):
 
 
 class SoundInterface(metaclass=SoundMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self):
-        pass
+        ...
+
+    @name.setter
+    def name(self):
+        ...
 
     @abc.abstractmethod
     def setup(self, *args, **kwargs):
