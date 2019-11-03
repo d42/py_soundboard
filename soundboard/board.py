@@ -1,17 +1,14 @@
-from __future__ import division
-
-import time
 import logging
-import traceback
 
-from .enums import ModifierTypes
-from .controls import ControlHandler
 from .client_api import ApiManager
-from .sounds import SoundSet, SoundFactory
+from .controls import ControlHandler
+from .enums import ModifierTypes
 from .mixer import SDLMixer
 from .mqtt import MQTT
+from .sounds import SoundFactory
+from .sounds import SoundSet
 
-logger = logging.getLogger('board')
+logger = logging.getLogger('soundboard.board')
 
 
 class Board():
@@ -25,7 +22,7 @@ class Board():
         self.sound_factory = SoundFactory(
             mixer=self.mixer,
             directory=settings['wav_directory'],
-            mqtt_callback=self.mqtt_send
+            mqtt_callback=self.mqtt_send,
         )
         self._dankness = False
 
@@ -74,12 +71,12 @@ class Board():
 
     def register_sound_set(self, sound_set=None, yamlfile=None):
         if all([yamlfile, sound_set]) or not any([sound_set, yamlfile]):
-            raise ValueError("provide SoundSet instance or yaml file path")
+            raise ValueError('provide SoundSet instance or yaml file path')
         if yamlfile and not sound_set:
             sound_set = SoundSet.from_yaml(
                 yamlfile,
                 settings=self.settings,
-                base_sound_factory=self.sound_factory
+                base_sound_factory=self.sound_factory,
             )
 
         if ModifierTypes.floating not in sound_set.modifiers:
@@ -92,7 +89,7 @@ class Board():
 
     def register_on_keys(self, sound_set, keys):
         if keys in self.combinations:
-            raise ValueError("combo %s is occupied" % list(keys))
+            raise ValueError('combo %s is occupied' % list(keys))
         self.combinations[frozenset(keys)] = sound_set
 
     def on_buttons(self, buttons):
@@ -115,7 +112,9 @@ class Board():
         if not pushed:
             return
         try:
-            sound_set.play(pushed, prometheus=self.settings.prometheus, board_state=self.board_state)
+            sound_set.play(
+                pushed, prometheus=self.settings.prometheus, board_state=self.board_state,
+            )
         except Exception as e:
             logger.exception(e)
 
@@ -129,7 +128,7 @@ class Board():
 
         buffers = {
             False: self.settings.button_poll_buffer/100,
-            True: self.settings.button_poll_active_buffer/100
+            True: self.settings.button_poll_active_buffer/100,
         }
         is_active = False
 

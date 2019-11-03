@@ -10,7 +10,7 @@ import requests.exceptions
 from soundboard.config import state
 from soundboard.types import api_state
 
-logger = logging.getLogger('api')
+logger = logging.getLogger('soundboard.api')
 instances: Dict[type, type] = {}
 
 

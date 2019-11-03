@@ -1,9 +1,11 @@
 import logging
 from queue import Queue
+
 import paho.mqtt.client as mqtt
 
 
-logger = logging.getLogger('mqtt')
+logger = logging.getLogger('soundboard.mqtt')
+
 
 class MQTT:
     queue = None
@@ -35,7 +37,7 @@ class MQTT:
         print(client, userdata, level, buf)
 
     def send(self, topic, message):
-        print("mqtt", topic, message)
+        print('mqtt', topic, message)
         self.mqtt_client.publish(topic, message)
 
     def _setup_mqtt(self):

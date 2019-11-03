@@ -1,36 +1,38 @@
+import abc
+import glob
+import logging
 import os
 import random
-import glob
-import socket
-import logging
-import abc
 import re
+import socket
 from threading import Thread
-from time import time, sleep
+from time import sleep
+from time import time
 
-import six
 import requests
 from prometheus_client import Counter
 
-from .vox import voxify
 from . import config
+from . import utils
+from .client_api import JSONApi
+from .exceptions import SoundException
+from .exceptions import VoxException
 from .mixer import SDLMixer
 from .types import sound_state
-from .client_api import JSONApi
-from .exceptions import SoundException, VoxException
-from . import utils
+from .vox import voxify
 
-logger = logging.getLogger('sounds')
+logger = logging.getLogger('soundboard.sounds')
 
-sound_counter = Counter("soundboard_total", "", ['sound_set', 'sound_name'])
+sound_counter = Counter('soundboard_total', '', ['sound_set', 'sound_name'])
 
 
 class SoundFactory:
 
-    def __init__(self, mixer, directory,
-                 state=config.state, settings=config.settings,
-                 mqtt_callback=None):
-        """:type mixer: SDLMixer"""
+    def __init__(
+        self, mixer: SDLMixer, directory,
+        state=config.state, settings=config.settings,
+        mqtt_callback=None,
+    ):
         # https://stackoverflow.com/questions/529240/what-happened-to-types-classtype-in-python-3
         self.mixer = mixer() if isinstance(mixer, type) else mixer
         self.settings = settings
@@ -39,10 +41,12 @@ class SoundFactory:
         self.mqtt_callback = mqtt_callback
 
     def by_name(self, name):
-        ":rtype: Sound"
+        ':rtype: Sound'
         cls = self.state.sounds.by_name(name)
-        instance = cls(mixer=self.mixer, base_dir=self.directory,
-                mqtt_callback=self.mqtt_callback)
+        instance = cls(
+            mixer=self.mixer, base_dir=self.directory,
+            mqtt_callback=self.mqtt_callback,
+        )
         instance.settings = self.settings  # TODO: unuglify
         return instance
 
@@ -52,7 +56,8 @@ class SoundFactory:
             directory=wav_directory,
             state=self.state,
             settings=self.settings,
-            mqtt_callback=self.mqtt_callback)
+            mqtt_callback=self.mqtt_callback,
+        )
 
     def __getattr__(self, attr):
         def funky_wrapper(data):
@@ -68,8 +73,7 @@ class SoundMeta(abc.ABCMeta):
         return utils.read_func_attributes(cls.setup)
 
 
-@six.add_metaclass(SoundMeta)
-class SoundInterface():
+class SoundInterface(metaclass=SoundMeta):
 
     @abc.abstractproperty
     def name(self):
@@ -87,8 +91,7 @@ class SoundInterface():
 class Sound(SoundInterface):
     running = False
 
-    def __init__(self, mixer, base_dir, data=None, mqtt_callback=None):
-        """:type mixer: SDLMixer"""
+    def __init__(self, mixer: SDLMixer, base_dir, data=None, mqtt_callback=None):
         self.mixer = mixer
         self.dir = base_dir
         self.name = "I'm so unnammed"
@@ -128,7 +131,9 @@ class Sound(SoundInterface):
 
     def _get_state(self):
         sample = self.current_sample
-        position = self.samples.index(sample) if sample in self.samples else None
+        position = self.samples.index(
+            sample,
+        ) if sample in self.samples else None
         return sound_state(sample, position)
 
     def _obtain_sample(self):  # sup :3
@@ -141,7 +146,7 @@ class Sound(SoundInterface):
 
     def play(self, is_async=False, **kwargs):
 
-        logger.info("playing %s", self.name)
+        logger.info('playing %s', self.name)
         self.current_sample = self._obtain_sample()
         self.current_sample.play(self.duration_const, is_async=is_async)
         self.running = True
@@ -165,7 +170,7 @@ class SimpleSound(Sound):
     name = 'simple'
 
     def setup(self, path):
-        super(SimpleSound, self).setup([path])
+        super().setup([path])
 
     @property
     def duration(self):
@@ -216,13 +221,15 @@ class VoxSound(Sound):
 
     def setup(self, sentence):
         try:
-            super(VoxSound, self).setup(voxify(sentence.lower()),
-                                        duration_const=self.vox_duration_const)
+            super().setup(
+                voxify(sentence.lower()),
+                duration_const=self.vox_duration_const,
+            )
         except SoundException as e:
             raise VoxException(e.msg, e.filename, sentence) from e
 
     def play(self):
-        super(VoxSound, self).play_all()
+        super().play_all()
 
 
 @config.state.sounds.register
@@ -239,11 +246,13 @@ class WeatherSound(Sound):
 
         self.location_id = location_id
 
-        self.api = JSONApi(weather_url,
-                           id=location_id,
-                           units='metric',
-                           appid='44db6a862fba0b067b1930da0d769e98',
-                           _interval=interval)
+        self.api = JSONApi(
+            weather_url,
+            id=location_id,
+            units='metric',
+            appid='44db6a862fba0b067b1930da0d769e98',
+            _interval=interval,
+        )
 
     @classmethod
     def _weather2text(cls, temperature):
@@ -272,11 +281,13 @@ class ZTMSound(Sound):
         jakdojade_url = self.settings.jakdojade_url
         self.line, self.stop, self.direction = line, stop, direction
 
-        self.api = JSONApi(jakdojade_url,
-                           line=self.line,
-                           stop=self.stop,
-                           direction=self.direction,
-                           _cacheme=False)
+        self.api = JSONApi(
+            jakdojade_url,
+            line=self.line,
+            stop=self.stop,
+            direction=self.direction,
+            _cacheme=False,
+        )
 
     @staticmethod
     def _get_type(content):
@@ -306,9 +317,11 @@ class ZTMSound(Sound):
         heading = 'accelerating {} {}'.format(*content['heading'])
         transport_type = cls._get_type(content)
 
-        sentence = ' '.join([transport_prefix[transport_type],
-                             heading,
-                             'will reach location at {h}{m} zulu'])
+        sentence = ' '.join([
+            transport_prefix[transport_type],
+            heading,
+            'will reach location at {h}{m} zulu',
+        ])
 
         return sentence.format(line=line, h=hours, m=minutes)
 
@@ -327,7 +340,7 @@ class ZTMSound(Sound):
 @config.state.sounds.register
 class PopeSound(Sound):
     name = 'pope'
-    pope_counter = Counter("soundboard_pope_rotations_total", "")
+    pope_counter = Counter('soundboard_pope_rotations_total', '')
     pope_rpm = 33
 
     def setup(self, path, pope_api, delay):
@@ -364,7 +377,7 @@ class Movie(Sound):
     def setup(self, path, destination):
         full_path = os.path.join(self.dir, path)
         if not os.path.exists(full_path):
-            raise ValueError("Path %s does not exist" % path)
+            raise ValueError('Path %s does not exist' % path)
         self.file_path = full_path
         self.destination = destination
 
@@ -375,9 +388,11 @@ class Movie(Sound):
             with open(self.file_path, 'rb') as file:
                 s.sendfile(file)
 
+
 @config.state.sounds.register
 class MQTT(Sound):
     name = 'mqtt'
+
     def setup(self, topic, message_on, message_off):
         self.topic = topic
         self.state = False
@@ -389,6 +404,7 @@ class MQTT(Sound):
         self.state = False if self.state else True
         self.mqtt_callback(self.topic, message)
 
+
 @config.state.sounds.register
 class MovieRoulette(Sound):
     name = 'movieroulette'
@@ -396,7 +412,7 @@ class MovieRoulette(Sound):
     def setup(self, path, destination):
         full_path = os.path.join(self.dir, path)
         if not os.path.exists(full_path):
-            raise ValueError("Path %s does not exist" % path)
+            raise ValueError('Path %s does not exist' % path)
         self.files_path = full_path
         self.destination = destination
 
@@ -410,7 +426,7 @@ class MovieRoulette(Sound):
                 s.sendfile(file)
 
 
-class SoundSet(object):
+class SoundSet:
 
     def __init__(self, config=None, base_sound_factory=None):
 
@@ -424,14 +440,14 @@ class SoundSet(object):
         if config:
             self.load_config(config, base_sound_factory)
 
-        logger.info("created board %s", self.name)
+        logger.info('created board %s', self.name)
 
     def __getitem__(self, name):
         return self.sounds[name]
 
     def load_config(self, config, base_sound_factory):
         self.sounds_factory = base_sound_factory.new_dir(
-            config['wav_directory']
+            config['wav_directory'],
         )
         self.name = config['name']
         self.keys = config['keys']
@@ -457,8 +473,10 @@ class SoundSet(object):
             is_async = soundentry['is_async']
             self.combinations[keys] = sound
             if name in self.sounds:
-                raise ValueError("%s sound %s already defined",
-                                 self.name, name)
+                raise ValueError(
+                    '%s sound %s already defined',
+                    self.name, name,
+                )
             self.sounds[name] = sound
             if dank:
                 self.dank_sounds.add(sound)
@@ -482,7 +500,7 @@ class SoundSet(object):
         for k, v in self.sounds.items():
             if v is sound:
                 return k
-        raise ValueError("Sound not found")
+        raise ValueError('Sound not found')
 
     def play(self, buttons, prometheus=False, board_state=None):
         board_state = board_state or dict()
@@ -510,7 +528,8 @@ class SoundSet(object):
             sound.handle_prometheus(self.name)
         else:
             sound_counter.labels(
-                {'sound_set': self.name, 'sound_name': sound_name}).inc()
+                {'sound_set': self.name, 'sound_name': sound_name},
+            ).inc()
 
     def stop(self, released_buttons):
         for (buttons, sound) in self.combinations.items():

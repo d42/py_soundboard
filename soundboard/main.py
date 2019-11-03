@@ -17,6 +17,9 @@ def get_files(directory, extension):
     return glob.glob(glob_path)
 
 
+logger = logging.getLogger('soundboard.main')
+
+
 def main():
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
     if '--debug' in sys.argv:

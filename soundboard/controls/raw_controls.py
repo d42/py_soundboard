@@ -9,7 +9,7 @@ from soundboard.exceptions import ControllerException
 from soundboard.types import event_tuple
 from soundboard.utils import init_sdl
 
-logger = logging.getLogger('controls.raw')
+logger = logging.getLogger('soundboard.controls.raw')
 
 
 class BaseRawJoystick():

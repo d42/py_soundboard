@@ -10,7 +10,7 @@ from argumentize import OptionStr
 
 from ..schema import SoundSet
 
-logger = logging.getLogger('config')
+logger = logging.getLogger('soundboard.config')
 
 
 class Settings(Argumentize):

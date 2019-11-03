@@ -1,27 +1,26 @@
-from __future__ import division
-
 import logging
 import time
 from itertools import chain
 
-
-from soundboard.enums import EventTypes
-from soundboard.types import states_tuple
-from soundboard.exceptions import ControllerException
-
 from .raw_controls import HANDLERS
+from soundboard.enums import EventTypes
+from soundboard.exceptions import ControllerException
+from soundboard.types import states_tuple
 
-logger = logging.getLogger('controls')
+logger = logging.getLogger('soundboard.controls')
 
 
 class Joystick():
     callback = None
 
-    def __init__(self, joystick_id, backend='evdev',
-                 buffer_msec=25, mapping=None, offset=0):
+    def __init__(
+        self, joystick_id, backend='evdev',
+        buffer_msec=25, mapping=None, offset=0,
+    ):
 
         self.raw_joystick = self.open_joystick(
-            joystick_id, backend, mapping, offset)
+            joystick_id, backend, mapping, offset,
+        )
 
         self.held = set()
         self.released = set()
@@ -30,7 +29,7 @@ class Joystick():
     def open_joystick(joystick_id, backend, mapping, offset):
         backend = HANDLERS.get(backend)
         if not backend:
-            ControllerException("unknown type %s" % backend)
+            ControllerException('unknown type %s' % backend)
         return backend(joystick_id, mapping=mapping, offset=offset)
 
     def poll_raw(self):
@@ -57,8 +56,10 @@ class ControlHandler():
 
     def poll_raw(self):
         return list(
-            chain.from_iterable(c.poll_raw()
-            for c in self.controllers)
+            chain.from_iterable(
+                c.poll_raw()
+                for c in self.controllers
+            ),
         )
 
     def poll_buffered(self, buffer_time):
