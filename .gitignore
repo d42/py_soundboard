@@ -5,5 +5,4 @@ __pycache__/
 /.idea
 build/
 dist/
-soundboardrc
 .mypy_cache/
