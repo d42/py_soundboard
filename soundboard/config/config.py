@@ -107,7 +107,7 @@ class YAMLConfig(UserDict):
         self._path = path
         logger.info('loading %s', path)
         with open(path, 'r') as file:
-            data = yaml.load(file.read())
+            data = yaml.safe_load(file.read())
 
             schema = SoundSet()
             schema.context = dict(
