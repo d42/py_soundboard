@@ -1,0 +1,7 @@
+wav_directory: simple/files
+yaml_directory: simple/yaml
+debug: true
+mqtt: false
+prometheus: false
+device_path: /dev/input/event19
+scancode_offset: 0

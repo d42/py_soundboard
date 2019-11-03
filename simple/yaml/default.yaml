@@ -1,0 +1,33 @@
+name: default
+delay_multiplier: 0
+delay_constant: 0
+modifiers: [http]
+sounds:
+    - name: Ba Dum Tss!
+      keys: [0]
+      type: simple
+      path: default/ba-dum-tish.wav
+
+    - name: whiplash
+      keys: [1]
+      type: random
+      paths: [default/whip2.wav, default/whip3.wav, default/whip4.wav]
+      is_async: True
+
+    - name: DAAAAAAYUM
+      keys: [2]
+      type: list
+      paths: [default/dayum1.wav, default/dayum2.wav, default/dayum3.wav]
+
+    - name: oof
+      keys: [0, 1]
+      type: simple
+      path: default/oof.wav
+      is_async: True
+
+    - name: light
+      keys: [4, 7]
+      type: mqtt
+      topic: 'iot/077521/relay/on/set'
+      message_on: 'true'
+      message_off: 'false'
