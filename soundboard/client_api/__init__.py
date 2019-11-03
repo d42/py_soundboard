@@ -10,7 +10,7 @@ import requests.exceptions
 from soundboard.config import state
 from soundboard.types import api_state
 
-logger = logging.getLogger('soundboard.api')
+logger = logging.getLogger("soundboard.api")
 instances: Dict[type, type] = {}
 
 
@@ -32,16 +32,16 @@ class ApiManager(Thread):
                     instance.update()
                 except Exception as es:
                     traceback.print_exc()
-                    logger.critical('api exception: %s', es)
+                    logger.critical("api exception: %s", es)
 
 
 class ApiClient:
 
-    OK = 'OK'
-    DISCONNECTED = 'ERROR'
-    UNAUTHORIZED = 'UNAUTHORIZED'
-    UNKNOWN = 'MALFUNCTION'
-    TIMEOUT = 'timeout'
+    OK = "OK"
+    DISCONNECTED = "ERROR"
+    UNAUTHORIZED = "UNAUTHORIZED"
+    UNKNOWN = "MALFUNCTION"
+    TIMEOUT = "timeout"
     cacheme = True
 
     def __new__(cls, url, _interval=2137, _cacheme=True, **arguments):
@@ -85,11 +85,11 @@ class ApiClient:
 
 @state.clients.register
 class JSONApi(ApiClient):
-    name = 'json'
+    name = "json"
 
     def fetch_update(self):
         http_to_status = {200: self.OK, 401: self.UNAUTHORIZED}
-        logging.info(f'requesting {self.url} ({self.params})')
+        logging.info(f"requesting {self.url} ({self.params})")
         try:
             req = requests.get(self.url, params=self.params, timeout=5)
         except requests.exceptions.ConnectionError:

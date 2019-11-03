@@ -21,16 +21,18 @@ from .mixer import SDLMixer
 from .types import sound_state
 from .vox import voxify
 
-logger = logging.getLogger('soundboard.sounds')
+logger = logging.getLogger("soundboard.sounds")
 
-sound_counter = Counter('soundboard_total', '', ['sound_set', 'sound_name'])
+sound_counter = Counter("soundboard_total", "", ["sound_set", "sound_name"])
 
 
 class SoundFactory:
-
     def __init__(
-        self, mixer: SDLMixer, directory,
-        state=config.state, settings=config.settings,
+        self,
+        mixer: SDLMixer,
+        directory,
+        state=config.state,
+        settings=config.settings,
         mqtt_callback=None,
     ):
         # https://stackoverflow.com/questions/529240/what-happened-to-types-classtype-in-python-3
@@ -41,11 +43,10 @@ class SoundFactory:
         self.mqtt_callback = mqtt_callback
 
     def by_name(self, name):
-        ':rtype: Sound'
+        ":rtype: Sound"
         cls = self.state.sounds.by_name(name)
         instance = cls(
-            mixer=self.mixer, base_dir=self.directory,
-            mqtt_callback=self.mqtt_callback,
+            mixer=self.mixer, base_dir=self.directory, mqtt_callback=self.mqtt_callback,
         )
         instance.settings = self.settings  # TODO: unuglify
         return instance
@@ -64,6 +65,7 @@ class SoundFactory:
             sound = self.by_name(attr)
             sound.setup(data)
             return sound
+
         return funky_wrapper
 
 
@@ -74,7 +76,6 @@ class SoundMeta(abc.ABCMeta):
 
 
 class SoundInterface(metaclass=SoundMeta):
-
     @abc.abstractproperty
     def name(self):
         pass
@@ -124,29 +125,24 @@ class Sound(SoundInterface):
         return samples[state.position if state.position else 0]
 
     def signal(self, name):
-        func = getattr(self, 'on_' + name)
+        func = getattr(self, "on_" + name)
         current_state = self._get_state()
         sample = func(self.samples, current_state)
         return sample
 
     def _get_state(self):
         sample = self.current_sample
-        position = self.samples.index(
-            sample,
-        ) if sample in self.samples else None
+        position = self.samples.index(sample) if sample in self.samples else None
         return sound_state(sample, position)
 
     def _obtain_sample(self):  # sup :3
-        signals = ['start', 'next'][1 if self.running else 0:]
-        sample = next(
-            sample for sample
-            in map(self.signal, signals) if sample
-        )
+        signals = ["start", "next"][1 if self.running else 0:]
+        sample = next(sample for sample in map(self.signal, signals) if sample)
         return sample
 
     def play(self, is_async=False, **kwargs):
 
-        logger.info('playing %s', self.name)
+        logger.info("playing %s", self.name)
         self.current_sample = self._obtain_sample()
         self.current_sample.play(self.duration_const, is_async=is_async)
         self.running = True
@@ -157,7 +153,7 @@ class Sound(SoundInterface):
 
     def end(self):
         self.running = False
-        sample = self.signal('end')
+        sample = self.signal("end")
         if sample:
             return sample.play()  # noqa
 
@@ -165,9 +161,10 @@ class Sound(SoundInterface):
 # https://stackoverflow.com/questions/3862310/how-can-i-find-all-subclasses-of-a-given-class-in-python
 # TODO: Increase magic
 
+
 @config.state.sounds.register
 class SimpleSound(Sound):
-    name = 'simple'
+    name = "simple"
 
     def setup(self, path):
         super().setup([path])
@@ -179,7 +176,7 @@ class SimpleSound(Sound):
 
 @config.state.sounds.register
 class RandomSound(Sound):
-    name = 'random'
+    name = "random"
 
     @staticmethod
     def on_start(samples, state):
@@ -188,7 +185,7 @@ class RandomSound(Sound):
 
 @config.state.sounds.register
 class ListSound(Sound):
-    name = 'list'
+    name = "list"
 
     @staticmethod
     def on_start(samples, state):
@@ -197,7 +194,7 @@ class ListSound(Sound):
 
 @config.state.sounds.register
 class WrappedSound(Sound):
-    name = 'wrapped'
+    name = "wrapped"
 
     @staticmethod
     def on_next(samples, state):
@@ -216,14 +213,13 @@ class WrappedSound(Sound):
 
 @config.state.sounds.register
 class VoxSound(Sound):
-    name = 'vox'
+    name = "vox"
     vox_duration_const = 0.15
 
     def setup(self, sentence):
         try:
             super().setup(
-                voxify(sentence.lower()),
-                duration_const=self.vox_duration_const,
+                voxify(sentence.lower()), duration_const=self.vox_duration_const,
             )
         except SoundException as e:
             raise VoxException(e.msg, e.filename, sentence) from e
@@ -234,10 +230,10 @@ class VoxSound(Sound):
 
 @config.state.sounds.register
 class WeatherSound(Sound):
-    name = 'weather'
-    location_id = 'warsaw,pl'
-    sentence = 'topside temperature is %s degrees'
-    below_zero = 'sub zero'
+    name = "weather"
+    location_id = "warsaw,pl"
+    sentence = "topside temperature is %s degrees"
+    below_zero = "sub zero"
     temperature = 2137
 
     def setup(self, location_id, weather_url=None, interval=None):
@@ -249,14 +245,14 @@ class WeatherSound(Sound):
         self.api = JSONApi(
             weather_url,
             id=location_id,
-            units='metric',
-            appid='44db6a862fba0b067b1930da0d769e98',
+            units="metric",
+            appid="44db6a862fba0b067b1930da0d769e98",
             _interval=interval,
         )
 
     @classmethod
     def _weather2text(cls, temperature):
-        text = cls.sentence + ' ' + (cls.below_zero if temperature < 0 else '')
+        text = cls.sentence + " " + (cls.below_zero if temperature < 0 else "")
         return text % abs(temperature)
 
     def play(self):
@@ -266,7 +262,7 @@ class WeatherSound(Sound):
             logger.critical(req)
             sound.setup(req.status)
         else:
-            temperature = req.data.get('main', {}).get('temp')
+            temperature = req.data.get("main", {}).get("temp")
             self.temperature = temperature
             sentence = self._weather2text(temperature)
             sound.setup(sentence)
@@ -275,7 +271,7 @@ class WeatherSound(Sound):
 
 @config.state.sounds.register
 class ZTMSound(Sound):
-    name = 'ztm'
+    name = "ztm"
 
     def setup(self, line, stop, direction):
         jakdojade_url = self.settings.jakdojade_url
@@ -291,37 +287,39 @@ class ZTMSound(Sound):
 
     @staticmethod
     def _get_type(content):
-        if 'type' in content:
-            return content['type']
-        line = content['line']
-        if re.match(r'^[0-9]{1,2}$', line):
-            return 'train'
-        elif re.match(r'^[0-9]{3}$', line):
-            return 'bus'
-        elif re.match(r'^m[0-9]+$', line.lower()):
-            return 'metro'
+        if "type" in content:
+            return content["type"]
+        line = content["line"]
+        if re.match(r"^[0-9]{1,2}$", line):
+            return "train"
+        elif re.match(r"^[0-9]{3}$", line):
+            return "bus"
+        elif re.match(r"^m[0-9]+$", line.lower()):
+            return "metro"
         else:
-            return 'transportation'
+            return "transportation"
 
     @classmethod
     def _ztm2text(cls, content):
         transport_prefix = {
-            'train': 'topside train number {line}',
-            'bus': 'day bust number {line}',
-            'metro': 'subsurface train line {line}',
-            'transportation': 'transportation',
+            "train": "topside train number {line}",
+            "bus": "day bust number {line}",
+            "metro": "subsurface train line {line}",
+            "transportation": "transportation",
         }
-        line = content['line']
-        minutes = content['minutes']
-        hours = content['hours']
-        heading = 'accelerating {} {}'.format(*content['heading'])
+        line = content["line"]
+        minutes = content["minutes"]
+        hours = content["hours"]
+        heading = "accelerating {} {}".format(*content["heading"])
         transport_type = cls._get_type(content)
 
-        sentence = ' '.join([
-            transport_prefix[transport_type],
-            heading,
-            'will reach location at {h}{m} zulu',
-        ])
+        sentence = " ".join(
+            [
+                transport_prefix[transport_type],
+                heading,
+                "will reach location at {h}{m} zulu",
+            ],
+        )
 
         return sentence.format(line=line, h=hours, m=minutes)
 
@@ -339,8 +337,8 @@ class ZTMSound(Sound):
 
 @config.state.sounds.register
 class PopeSound(Sound):
-    name = 'pope'
-    pope_counter = Counter('soundboard_pope_rotations_total', '')
+    name = "pope"
+    pope_counter = Counter("soundboard_pope_rotations_total", "")
     pope_rpm = 33
 
     def setup(self, path, pope_api, delay):
@@ -357,41 +355,42 @@ class PopeSound(Sound):
     def pope_start(self):
         def func():
             sleep(self.delay)
-            url = self.pope_api.format(op='on')
+            url = self.pope_api.format(op="on")
             requests.get(url)
+
         Thread(target=func).start()
 
     def pope_stop(self):
-        url = self.pope_api.format(op='off')
+        url = self.pope_api.format(op="off")
         requests.get(url)
 
     def handle_prometheus(self, board_name):
         rotation_time = self.sound.duration - self.delay
-        self.pope_counter.inc(amount=(rotation_time/60) * self.pope_rpm)
+        self.pope_counter.inc(amount=(rotation_time / 60) * self.pope_rpm)
 
 
 @config.state.sounds.register
 class Movie(Sound):
-    name = 'movie'
+    name = "movie"
 
     def setup(self, path, destination):
         full_path = os.path.join(self.dir, path)
         if not os.path.exists(full_path):
-            raise ValueError('Path %s does not exist' % path)
+            raise ValueError("Path %s does not exist" % path)
         self.file_path = full_path
         self.destination = destination
 
     def play(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            host, port = self.destination.split(':')
+            host, port = self.destination.split(":")
             s.connect((host, int(port)))
-            with open(self.file_path, 'rb') as file:
+            with open(self.file_path, "rb") as file:
                 s.sendfile(file)
 
 
 @config.state.sounds.register
 class MQTT(Sound):
-    name = 'mqtt'
+    name = "mqtt"
 
     def setup(self, topic, message_on, message_off):
         self.topic = topic
@@ -407,27 +406,26 @@ class MQTT(Sound):
 
 @config.state.sounds.register
 class MovieRoulette(Sound):
-    name = 'movieroulette'
+    name = "movieroulette"
 
     def setup(self, path, destination):
         full_path = os.path.join(self.dir, path)
         if not os.path.exists(full_path):
-            raise ValueError('Path %s does not exist' % path)
+            raise ValueError("Path %s does not exist" % path)
         self.files_path = full_path
         self.destination = destination
 
     def play(self):
-        files = glob.glob(os.path.join(self.files_path, '*'))
+        files = glob.glob(os.path.join(self.files_path, "*"))
         file_path = random.choice(files)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            host, port = self.destination.split(':')
+            host, port = self.destination.split(":")
             s.connect((host, int(port)))
-            with open(file_path, 'rb') as file:
+            with open(file_path, "rb") as file:
                 s.sendfile(file)
 
 
 class SoundSet:
-
     def __init__(self, config=None, base_sound_factory=None):
 
         self.startup_sound = None
@@ -440,18 +438,16 @@ class SoundSet:
         if config:
             self.load_config(config, base_sound_factory)
 
-        logger.info('created board %s', self.name)
+        logger.info("created board %s", self.name)
 
     def __getitem__(self, name):
         return self.sounds[name]
 
     def load_config(self, config, base_sound_factory):
-        self.sounds_factory = base_sound_factory.new_dir(
-            config['wav_directory'],
-        )
-        self.name = config['name']
-        self.keys = config['keys']
-        self.modifiers = config.get('modifiers', list())
+        self.sounds_factory = base_sound_factory.new_dir(config["wav_directory"])
+        self.name = config["name"]
+        self.keys = config["keys"]
+        self.modifiers = config.get("modifiers", list())
         self._load_sounds(config)
 
     @classmethod
@@ -460,23 +456,20 @@ class SoundSet:
         return cls(config=cfg, base_sound_factory=base_sound_factory, *args, **kwargs)
 
     def _load_sounds(self, config):
-        startup_entry = config.get('startup', {}).get('sound')
+        startup_entry = config.get("startup", {}).get("sound")
         if startup_entry:
             self.startup_sound = self._create_sound(startup_entry)
 
-        for soundentry in config['sounds']:
+        for soundentry in config["sounds"]:
             sound = self._create_sound(soundentry)
 
-            keys = soundentry['keys']
-            name = soundentry['name']
-            dank = soundentry['dank']
-            is_async = soundentry['is_async']
+            keys = soundentry["keys"]
+            name = soundentry["name"]
+            dank = soundentry["dank"]
+            is_async = soundentry["is_async"]
             self.combinations[keys] = sound
             if name in self.sounds:
-                raise ValueError(
-                    '%s sound %s already defined',
-                    self.name, name,
-                )
+                raise ValueError("%s sound %s already defined", self.name, name)
             self.sounds[name] = sound
             if dank:
                 self.dank_sounds.add(sound)
@@ -485,10 +478,10 @@ class SoundSet:
                 self.async_sounds.add(sound)
 
     def _create_sound(self, sound_cfg):
-        sound = self.sounds_factory.by_name(sound_cfg['type'])
-        attributes = sound_cfg['attributes']
-        if 'name' in sound_cfg:
-            sound.name = sound_cfg['name']
+        sound = self.sounds_factory.by_name(sound_cfg["type"])
+        attributes = sound_cfg["attributes"]
+        if "name" in sound_cfg:
+            sound.name = sound_cfg["name"]
         sound.setup(**attributes)
         return sound
 
@@ -500,7 +493,7 @@ class SoundSet:
         for k, v in self.sounds.items():
             if v is sound:
                 return k
-        raise ValueError('Sound not found')
+        raise ValueError("Sound not found")
 
     def play(self, buttons, prometheus=False, board_state=None):
         board_state = board_state or dict()
@@ -512,9 +505,9 @@ class SoundSet:
         if not sound:
             return
 
-        if sound in self.dank_sounds and not board_state.get('allow_dank_memes'):
-            sound = self.sounds_factory.by_name('vox')
-            sound.setup('access denied')
+        if sound in self.dank_sounds and not board_state.get("allow_dank_memes"):
+            sound = self.sounds_factory.by_name("vox")
+            sound.setup("access denied")
 
         if sound in self.async_sounds:
             sound.play(is_async=True)
@@ -524,11 +517,11 @@ class SoundSet:
             return
 
         sound_name = self.sound_name(sound)
-        if hasattr(sound, 'handle_prometheus'):
+        if hasattr(sound, "handle_prometheus"):
             sound.handle_prometheus(self.name)
         else:
             sound_counter.labels(
-                {'sound_set': self.name, 'sound_name': sound_name},
+                {"sound_set": self.name, "sound_name": sound_name},
             ).inc()
 
     def stop(self, released_buttons):

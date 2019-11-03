@@ -6,22 +6,23 @@ from sdl2 import sdlmixer
 
 
 def init_sdl():
-    initialized = getattr(init_sdl, 'initialized', False)
+    initialized = getattr(init_sdl, "initialized", False)
     if initialized:
         return True
 
     sdl2.SDL_Init(0)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_AUDIO)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
-    sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b'1')
+    sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b"1")
 
-    result = sdlmixer.Mix_OpenAudio(
-        sdlmixer.MIX_DEFAULT_FREQUENCY,
-        sdlmixer.MIX_DEFAULT_FORMAT,
-        2, 1024,
-    ) != -1
+    result = (
+        sdlmixer.Mix_OpenAudio(
+            sdlmixer.MIX_DEFAULT_FREQUENCY, sdlmixer.MIX_DEFAULT_FORMAT, 2, 1024,
+        )
+        != -1
+    )
     if result:
-        setattr(init_sdl, 'initialized', True)
+        setattr(init_sdl, "initialized", True)
     return result
 
 
@@ -32,7 +33,7 @@ def read_func_attributes(func):
         defaults = {k: v for k, v in zip(reversed(spec.args), spec.defaults)}
     else:
         defaults = {}
-    args.pop('self')  # TODO: do this better :3
+    args.pop("self")  # TODO: do this better :3
     return args, defaults
 
 

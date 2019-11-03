@@ -1,13 +1,15 @@
 import pytest
-from soundboard.controls import Joystick, ControlHandler
+
+from soundboard.controls import ControlHandler
+from soundboard.controls import Joystick
 from soundboard.enums import EventTypes
-from soundboard.types import event_tuple, states_tuple
+from soundboard.types import event_tuple
+from soundboard.types import states_tuple
 
 joystick_plugged_in = pytest.mark.joystick_plugged_in
 
 
 class StubJoystick:
-
     def __init__(self, device_path, mapping=None, offset=0):
         pass
 
@@ -22,13 +24,13 @@ class StubJoystick:
 
 @joystick_plugged_in
 def test_sdl():
-    j = Joystick(0, backend='sdl')
+    j = Joystick(0, backend="sdl")
     assert j is not None
 
 
 @joystick_plugged_in
 def test_evdev():
-    j = Joystick("/dev/input/event0", backend='evdev')
+    j = Joystick("/dev/input/event0", backend="evdev")
     assert j is not None
 
 

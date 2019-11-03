@@ -7,7 +7,6 @@ repos:
     -   id: check-docstring-first
     -   id: check-yaml
     -   id: debug-statements
-    -   id: name-tests-test
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.8
     hooks:
@@ -29,6 +28,6 @@ repos:
     -   id: pyupgrade
         args: [--py36-plus]
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.730
+    rev: v0.740
     hooks:
     -   id: mypy

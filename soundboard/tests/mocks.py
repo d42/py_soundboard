@@ -1,12 +1,12 @@
+from sdl2 import sdlmixer
+
 from soundboard.mixer import SDLMixer
 from soundboard.sounds import Sound
-from sdl2 import sdlmixer
 
 
 class NOPMixer(SDLMixer):
-
     def __init__(self):
-        super(NOPMixer, self).__init__()
+        super().__init__()
         self.played = []
 
     def play(self, chunk):
@@ -17,8 +17,8 @@ class NOPMixer(SDLMixer):
 
 
 class MockSound(Sound):
-    name = 'testtype'
-    config_sounds_attribute = 'testinput'
+    name = "testtype"
+    config_sounds_attribute = "testinput"
 
     def setup(self, testinput, ebin=True):
         pass

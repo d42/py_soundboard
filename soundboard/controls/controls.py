@@ -7,20 +7,17 @@ from soundboard.enums import EventTypes
 from soundboard.exceptions import ControllerException
 from soundboard.types import states_tuple
 
-logger = logging.getLogger('soundboard.controls')
+logger = logging.getLogger("soundboard.controls")
 
 
-class Joystick():
+class Joystick:
     callback = None
 
     def __init__(
-        self, joystick_id, backend='evdev',
-        buffer_msec=25, mapping=None, offset=0,
+        self, joystick_id, backend="evdev", buffer_msec=25, mapping=None, offset=0,
     ):
 
-        self.raw_joystick = self.open_joystick(
-            joystick_id, backend, mapping, offset,
-        )
+        self.raw_joystick = self.open_joystick(joystick_id, backend, mapping, offset)
 
         self.held = set()
         self.released = set()
@@ -29,7 +26,7 @@ class Joystick():
     def open_joystick(joystick_id, backend, mapping, offset):
         backend = HANDLERS.get(backend)
         if not backend:
-            ControllerException('unknown type %s' % backend)
+            ControllerException("unknown type %s" % backend)
         return backend(joystick_id, mapping=mapping, offset=offset)
 
     def poll_raw(self):
@@ -41,7 +38,7 @@ class Joystick():
         return not self.raw_joystick.isempty
 
 
-class ControlHandler():
+class ControlHandler:
     def __init__(self):
         self.controllers = []
         self.held = set()
@@ -55,19 +52,14 @@ class ControlHandler():
         return any(j.pending for j in self.controllers)
 
     def poll_raw(self):
-        return list(
-            chain.from_iterable(
-                c.poll_raw()
-                for c in self.controllers
-            ),
-        )
+        return list(chain.from_iterable(c.poll_raw() for c in self.controllers))
 
     def poll_buffered(self, buffer_time):
         pushed = set()
         released = set()
         break_on = 0
 
-        for i in range(int(buffer_time/0.01)):
+        for i in range(int(buffer_time / 0.01)):
             time.sleep(0.01)
             events = self.poll_raw()
             if not any([events, pushed, released]):
@@ -77,12 +69,12 @@ class ControlHandler():
             pushed |= state.pushed
             if state.released:
                 if not break_on:
-                    break_on = i+4
+                    break_on = i + 4
             if break_on and break_on == i:
                 break
 
-        clicks = (pushed & released)
-        self.held |= (pushed - released)
+        clicks = pushed & released
+        self.held |= pushed - released
         self.held -= released
 
         self.released |= released

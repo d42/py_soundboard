@@ -6,4 +6,4 @@ def update_weather(board):
         if isinstance(sound, WeatherSound):
             temp = WeatherSound.get_temperature(sound.location)
             sound.update_temperature(temp)
-        params = {'q': location, 'units': 'metric'}  # noqa
+        params = {"q": location, "units": "metric"}  # noqa

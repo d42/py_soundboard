@@ -8,11 +8,10 @@ from .config import settings
 from .utils import Singleton
 from soundboard.utils import init_sdl
 
-chunk_tuple = namedtuple('chunk_info', 'chunk duration')
+chunk_tuple = namedtuple("chunk_info", "chunk duration")
 
 
 class SDLMixer(metaclass=Singleton):
-
     def __init__(self):
         super().__init__()
         init_sdl()
@@ -28,7 +27,7 @@ class SDLMixer(metaclass=Singleton):
         return RawSound(path, chunk, self)
 
     def _load_chunk(self, fs_path):
-        chunk = sdlmixer.Mix_LoadWAV(fs_path.encode('utf-8'))
+        chunk = sdlmixer.Mix_LoadWAV(fs_path.encode("utf-8"))
         wave_file = wave.open(fs_path)
         duration = wave_file.getnframes() / wave_file.getframerate()
         self.chunks[fs_path] = chunk_tuple(chunk, duration)
@@ -36,7 +35,6 @@ class SDLMixer(metaclass=Singleton):
 
 
 class NOPMixer(SDLMixer):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.played = []
@@ -49,8 +47,7 @@ class NOPMixer(SDLMixer):
         sdlmixer.Mix_HaltChannel(-1)
 
 
-class RawSound():
-
+class RawSound:
     def __init__(self, path, chunk, mixer):
         self.path = path
         self.duration = chunk.duration

@@ -8,20 +8,19 @@ from .mqtt import MQTT
 from .sounds import SoundFactory
 from .sounds import SoundSet
 
-logger = logging.getLogger('soundboard.board')
+logger = logging.getLogger("soundboard.board")
 
 
-class Board():
-
+class Board:
     def __init__(self, settings):
-        '''
+        """
         :type settings: soundboard.config.settings
-        '''
+        """
         self.settings = settings
         self.mixer = SDLMixer()
         self.sound_factory = SoundFactory(
             mixer=self.mixer,
-            directory=settings['wav_directory'],
+            directory=settings["wav_directory"],
             mqtt_callback=self.mqtt_send,
         )
         self._dankness = False
@@ -32,13 +31,13 @@ class Board():
         self.control = ControlHandler()
         self.running = False
         self.active_sound_set = None
-        self.board_state = {'allow_dank_memes': False}
+        self.board_state = {"allow_dank_memes": False}
         if self.settings.mqtt:
             self._setup_mqtt()
 
     def _setup_mqtt(self):
         def mqtt_dankness(topic, payload):
-            allow = {b'safe': False, b'engaged': True}[payload]
+            allow = {b"safe": False, b"engaged": True}[payload]
             self.dankness = allow
 
         self.mqtt_client = MQTT(
@@ -47,22 +46,22 @@ class Board():
             password=self.settings.mqtt_password,
         )
 
-        self.mqtt_client.add_topic_handler('hswaw/dank/state', mqtt_dankness)
+        self.mqtt_client.add_topic_handler("hswaw/dank/state", mqtt_dankness)
 
     def mqtt_send(self, topic, message):
         self.mqtt_client.send(topic, message)
 
     @property
     def dankness(self):
-        return self.board_state['allow_dank_memes']
+        return self.board_state["allow_dank_memes"]
 
     @dankness.setter
     def dankness(self, new_dankness):
         if self.dankness == new_dankness:
             return
-        self.board_state['allow_dank_memes'] = new_dankness
-        mode = 'engaged' if new_dankness else 'disengaged'
-        sound = self.sound_factory.vox('may may mode %s' % mode)
+        self.board_state["allow_dank_memes"] = new_dankness
+        mode = "engaged" if new_dankness else "disengaged"
+        sound = self.sound_factory.vox("may may mode %s" % mode)
         sound.play()
 
     def register_joystick(self, joystick):
@@ -71,12 +70,10 @@ class Board():
 
     def register_sound_set(self, sound_set=None, yamlfile=None):
         if all([yamlfile, sound_set]) or not any([sound_set, yamlfile]):
-            raise ValueError('provide SoundSet instance or yaml file path')
+            raise ValueError("provide SoundSet instance or yaml file path")
         if yamlfile and not sound_set:
             sound_set = SoundSet.from_yaml(
-                yamlfile,
-                settings=self.settings,
-                base_sound_factory=self.sound_factory,
+                yamlfile, settings=self.settings, base_sound_factory=self.sound_factory,
             )
 
         if ModifierTypes.floating not in sound_set.modifiers:
@@ -89,7 +86,7 @@ class Board():
 
     def register_on_keys(self, sound_set, keys):
         if keys in self.combinations:
-            raise ValueError('combo %s is occupied' % list(keys))
+            raise ValueError("combo %s is occupied" % list(keys))
         self.combinations[frozenset(keys)] = sound_set
 
     def on_buttons(self, buttons):
@@ -113,7 +110,9 @@ class Board():
             return
         try:
             sound_set.play(
-                pushed, prometheus=self.settings.prometheus, board_state=self.board_state,
+                pushed,
+                prometheus=self.settings.prometheus,
+                board_state=self.board_state,
             )
         except Exception as e:
             logger.exception(e)
@@ -127,8 +126,8 @@ class Board():
         self.api_manager.start()
 
         buffers = {
-            False: self.settings.button_poll_buffer/100,
-            True: self.settings.button_poll_active_buffer/100,
+            False: self.settings.button_poll_buffer / 100,
+            True: self.settings.button_poll_active_buffer / 100,
         }
         is_active = False
 

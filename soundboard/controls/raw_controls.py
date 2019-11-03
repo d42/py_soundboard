@@ -9,11 +9,10 @@ from soundboard.exceptions import ControllerException
 from soundboard.types import event_tuple
 from soundboard.utils import init_sdl
 
-logger = logging.getLogger('soundboard.controls.raw')
+logger = logging.getLogger("soundboard.controls.raw")
 
 
-class BaseRawJoystick():
-
+class BaseRawJoystick:
     def __init__(self, mapping=None, offset=0):
         self.mapping = mapping if mapping else dict()
         self.scancode_offset = offset
@@ -40,14 +39,15 @@ class BaseRawJoystick():
 
     def translate(self, event):
         """:type event: event_tuple"""
+
         def shift(button):
             new_button = button - self.scancode_offset
-            logger.debug('shift %d -> %d', button, new_button)
+            logger.debug("shift %d -> %d", button, new_button)
             return new_button
 
         def remap(button):
             new_button = self.mapping.get(button, button)
-            logger.debug('remap %d -> %d', button, new_button)
+            logger.debug("remap %d -> %d", button, new_button)
             return new_button
 
         button, type = event
@@ -57,7 +57,7 @@ class BaseRawJoystick():
 
 class RawQueueJoystick(BaseRawJoystick):
     def __init__(self, queue, mapping=None, offset=0):
-        ''':type queue: Queue.Queue'''
+        """:type queue: Queue.Queue"""
         super().__init__(mapping, offset)
         self.queue = queue
         self.keys_held = dict()
@@ -67,7 +67,7 @@ class RawQueueJoystick(BaseRawJoystick):
         while not self.queue.empty():
             button_id, event_id = self.queue.get_nowait()
             event = EventTypes(event_id)
-            logging.info('%s %s', button_id, event)
+            logging.info("%s %s", button_id, event)
             self.events.append(event_tuple(button_id, event))
             if event == EventTypes.push:
                 timestamp = time.time()
@@ -91,7 +91,6 @@ class RawQueueJoystick(BaseRawJoystick):
 
 
 class RawSDLJoystick(BaseRawJoystick):
-
     @property
     def JOYSTICK_EVENTS(self):
         return (sdl2.SDL_JOYBUTTONUP, sdl2.SDL_JOYBUTTONDOWN)
@@ -105,12 +104,11 @@ class RawSDLJoystick(BaseRawJoystick):
     def open_joystick(joystick_id):
         joystick = sdl2.SDL_JoystickOpen(joystick_id)
         if not joystick:
-            text = 'Joystick %d could not be initialized' % joystick_id
+            text = "Joystick %d could not be initialized" % joystick_id
             raise ControllerException(text)
         return joystick
 
     def update(self):
-
         def to_tuple(event):
             button = event.button.jbutton
             type = EventTypes.from_sdl(event.type)
@@ -123,7 +121,6 @@ class RawSDLJoystick(BaseRawJoystick):
 
 
 class RawEVDEVJoystick(BaseRawJoystick):
-
     @property
     def JOYSTICK_EVENTS(self):
         return [evdev.ecodes.EV_KEY]  # noqa
@@ -134,7 +131,7 @@ class RawEVDEVJoystick(BaseRawJoystick):
         self.setup_device(self.device_path)
 
     def setup_device(self, device_path):
-        is_name = 'input/event' not in device_path
+        is_name = "input/event" not in device_path
         func = self.device_from_name if is_name else evdev.InputDevice
         try:
             self.joystick = func(device_path)
@@ -147,7 +144,7 @@ class RawEVDEVJoystick(BaseRawJoystick):
             dev = evdev.InputDevice(path)
             if dev.name == device_name:
                 return dev
-        raise ValueError('unknown device %s' % device_name)
+        raise ValueError("unknown device %s" % device_name)
 
     def _read(self):
         try:
