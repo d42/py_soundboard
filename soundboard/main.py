@@ -36,14 +36,17 @@ def main():
     for file in get_files(settings.yaml_directory, "yaml"):
         b.register_sound_set(yamlfile=file)
 
-    joystick = Joystick(
-        settings.device_path,
-        backend=settings.input_type,
-        mapping=settings.physical_mapping,
-        offset=settings.scancode_offset,
-    )
+    if b.settings.device_path:
+        joystick = Joystick(
+            settings.device_path,
+            backend=settings.input_type,
+            mapping=settings.physical_mapping,
+            offset=settings.scancode_offset,
+        )
 
-    b.register_joystick(joystick)
+        b.register_joystick(joystick)
+    else:
+        logger.warning("no hardware soundboard")
 
     if b.settings.mqtt:
         mqtt_queue = Queue()

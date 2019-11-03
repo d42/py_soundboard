@@ -24,7 +24,7 @@ class Settings(Argumentize):
     yaml_directory = OptionStr(required=True, fmt=os.path.expanduser)
     debug = OptionBool(False)
     input_type = OptionStr("evdev", help="sdl, evdev")
-    device_path = OptionStr(required=True)
+    device_path = OptionStr()
     button_poll_buffer = OptionInt(35)
     button_poll_active_buffer = OptionInt(15)
     scancode_offset = OptionInt(304)
