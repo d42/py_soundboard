@@ -23,7 +23,7 @@ python-versions = "*"
 version = "0.1"
 
 [package.source]
-reference = "d2dd26d9eb7610f81d4e4e727d09f69269efd218"
+reference = "a50c9f543ddb3cee68b087e93b61af4f3dab72de"
 type = "git"
 url = "https://github.com/d42/argumentize"
 [[package]]
