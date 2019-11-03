@@ -1,20 +1,21 @@
-import os
-import sys
 import glob
 import logging
+import os
+import sys
 from queue import Queue
 
 from prometheus_client import start_http_server
 
 from soundboard.board import Board
-from soundboard.controls import Joystick
-from soundboard.sounds import SoundSet
 from soundboard.config import settings
+from soundboard.controls import Joystick
 from soundboard.http import HTTPThread
+
 
 def get_files(directory, extension):
     glob_path = os.path.join(directory, '*.%s' % extension)
     return glob.glob(glob_path)
+
 
 def main():
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
@@ -32,9 +33,11 @@ def main():
     for file in get_files(settings.yaml_directory, 'yaml'):
         b.register_sound_set(yamlfile=file)
 
-    joystick = Joystick(settings.device_path, backend=settings.input_type,
-                        mapping=settings.physical_mapping,
-                        offset=settings.scancode_offset)
+    joystick = Joystick(
+        settings.device_path, backend=settings.input_type,
+        mapping=settings.physical_mapping,
+        offset=settings.scancode_offset,
+    )
 
     b.register_joystick(joystick)
 
@@ -51,5 +54,5 @@ def main():
     b.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

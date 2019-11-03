@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages
+from setuptools import setup
 
 setup(
     name='soundboard',
@@ -6,8 +7,9 @@ setup(
     packages=find_packages(exclude=['soundboard.tests']),
     entry_points={
         'console_scripts': [
-            'soundboard = soundboard.__main__:main'
-        ]},
+            'soundboard = soundboard.main:main',
+        ],
+    },
     install_requires=[
         'argumentize',
         'arrow==0.7.0',
@@ -22,10 +24,10 @@ setup(
         'translationstring==1.3',
         'Flask==0.10.1',
         'Flask-RESTful==0.3.5',
-        'paho-mqtt==1.2'
+        'paho-mqtt==1.2',
     ],
 
     dependency_links=[
-        'git+ssh://git@github.com/d42/argumentize.git#egg=argumentize'
-    ]
+        'git+ssh://git@github.com/d42/argumentize.git#egg=argumentize',
+    ],
 )

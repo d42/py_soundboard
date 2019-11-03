@@ -1,5 +1,9 @@
+__pycache__/
+*.py[cod]
+*$py.class
 .cache
 /.idea
 build/
 dist/
 soundboardrc
+.mypy_cache/

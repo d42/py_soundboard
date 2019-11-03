@@ -1,9 +1,12 @@
-import os
 import logging
+import os
+from collections import UserDict
 
 import yaml
-from argumentize import Argumentize, OptionStr, OptionInt, OptionBool
-from collections import UserDict
+from argumentize import Argumentize
+from argumentize import OptionBool
+from argumentize import OptionInt
+from argumentize import OptionStr
 
 from ..schema import SoundSet
 
@@ -12,8 +15,10 @@ logger = logging.getLogger('config')
 
 class Settings(Argumentize):
 
-    physical_mapping = {k: i for (i, k) in
-                        enumerate([8, 7, 6, 5, 1, 2, 3, 4, 9, 10, 11, 0])}
+    physical_mapping = {
+        k: i for (i, k) in
+        enumerate([8, 7, 6, 5, 1, 2, 3, 4, 9, 10, 11, 0])
+    }
     buttons_count = len(physical_mapping)
 
     wav_directory = OptionStr(required=True, fmt=os.path.expanduser)
@@ -46,6 +51,7 @@ class Settings(Argumentize):
 
     def __getitem__(self, key):
         return getattr(self, key)
+
 
 settings = Settings('soundboard')
 
@@ -99,7 +105,7 @@ class YAMLConfig(UserDict):
 
     def load(self, path):
         self._path = path
-        logger.info("loading %s", path)
+        logger.info('loading %s', path)
         with open(path, 'r') as file:
             data = yaml.load(file.read())
 
@@ -108,9 +114,7 @@ class YAMLConfig(UserDict):
                 sounds=self.state.sounds,
                 settings=self.settings,
             )
-            self.data, errors = schema.load(data)
-            if errors:
-                raise Exception(path, errors)
+            self.data = schema.load(data)
 
     def reload(self):
         self.load(self._path)

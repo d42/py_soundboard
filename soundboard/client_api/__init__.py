@@ -1,23 +1,22 @@
-import time
 import json
 import logging
+import time
 import traceback
 from threading import Thread
+from typing import Dict
 
-import requests
 import requests.exceptions
 
-from soundboard.types import api_state
 from soundboard.config import state
+from soundboard.types import api_state
 
 logger = logging.getLogger('api')
-instances = {}
+instances: Dict[type, type] = {}
 
 
 class ApiManager(Thread):
-
     def __init__(self, instances=instances):
-        super(ApiManager, self).__init__()
+        super().__init__()
         self.daemon = True
         self.instances = instances
 
@@ -33,7 +32,7 @@ class ApiManager(Thread):
                     instance.update()
                 except Exception as es:
                     traceback.print_exc()
-                    logger.critical("api exception: %s", es)
+                    logger.critical('api exception: %s', es)
 
 
 class ApiClient:
@@ -49,7 +48,7 @@ class ApiClient:
         attrs = cls, url, tuple(arguments.items())
         if attrs in instances:
             return instances[attrs]
-        instance = super(ApiClient, cls).__new__(cls)
+        instance = super().__new__(cls)
         instance.cacheme = _cacheme
         instance.interval = _interval
         instances[attrs] = instance
@@ -80,7 +79,8 @@ class ApiClient:
         return (time.time() - self.timestamp) > self.interval or not self.cacheme
 
     @property
-    def status(self): return self._status
+    def status(self):
+        return self._status
 
 
 @state.clients.register
@@ -89,7 +89,7 @@ class JSONApi(ApiClient):
 
     def fetch_update(self):
         http_to_status = {200: self.OK, 401: self.UNAUTHORIZED}
-        logging.info("requesting {} ({})".format(self.url, self.params))
+        logging.info(f'requesting {self.url} ({self.params})')
         try:
             req = requests.get(self.url, params=self.params, timeout=5)
         except requests.exceptions.ConnectionError:

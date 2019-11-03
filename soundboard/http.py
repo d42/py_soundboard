@@ -1,13 +1,18 @@
+from queue import Queue
 from threading import Thread
-from six.moves.queue import Queue
-from flask import Flask, current_app, g, make_response
-from flask_restful import Api, Resource
+
+from flask import current_app
+from flask import Flask
+from flask import make_response
+from flask_restful import Api
+from flask_restful import Resource
 
 api = Api()
 
 
 @api.resource('/')
 class Index(Resource):
+
     def get(self):
         board = current_app.board
         return {'sound_sets': list(board.shared_online)}
@@ -15,6 +20,7 @@ class Index(Resource):
 
 @api.resource('/sound_set/<string:set_name>', endpoint='sound_set')
 class SoundSet(Resource):
+
     def get(self, set_name):
         board = current_app.board
         sound_set = board.shared_online.get(set_name)
@@ -26,6 +32,7 @@ class SoundSet(Resource):
 
 @api.resource('/remote-input/<int:btn>/<int:state>', endpoint='remote')
 class Remote(Resource):
+
     def post(self, btn, state):
         current_app.queue.put((btn, state))
         return make_response(('', 200, ()))
@@ -33,6 +40,7 @@ class Remote(Resource):
 
 @api.resource('/play/<string:set_name>/<string:sound_name>', endpoint='play')
 class Play(Resource):
+
     def get(self, set_name, sound_name):
         board = current_app.board
         sound_set = board.shared_online.get(set_name)
@@ -41,6 +49,7 @@ class Play(Resource):
 
 
 class FlaskApp:
+
     def __init__(self, board, settings):
         """:type board: soundboard.board.Board"""
         self.board = board
@@ -59,7 +68,7 @@ class FlaskApp:
 class HTTPThread(Thread):
 
     def __init__(self, board, settings):
-        super(HTTPThread, self).__init__()
+        super().__init__()
         self.daemon = True
         self.settings = settings
         self.app = FlaskApp(board, settings)

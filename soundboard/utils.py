@@ -1,6 +1,6 @@
 import inspect
+from typing import Dict
 
-import sdl2
 import sdl2.ext
 from sdl2 import sdlmixer
 
@@ -13,11 +13,13 @@ def init_sdl():
     sdl2.SDL_Init(0)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_AUDIO)
     sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
-    sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b"1")
+    sdl2.SDL_SetHint(sdl2.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, b'1')
 
-    result = sdlmixer.Mix_OpenAudio(sdlmixer.MIX_DEFAULT_FREQUENCY,
-                                    sdlmixer.MIX_DEFAULT_FORMAT,
-                                    2, 1024) != -1
+    result = sdlmixer.Mix_OpenAudio(
+        sdlmixer.MIX_DEFAULT_FREQUENCY,
+        sdlmixer.MIX_DEFAULT_FORMAT,
+        2, 1024,
+    ) != -1
     if result:
         setattr(init_sdl, 'initialized', True)
     return result
@@ -34,8 +36,9 @@ def read_func_attributes(func):
     return args, defaults
 
 
+# TODO: verify this
 class Singleton(type):
-    _instances = {}
+    _instances: Dict[type, type] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
