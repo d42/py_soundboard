@@ -6,6 +6,8 @@ from .raw_controls import HANDLERS
 from soundboard.enums import EventTypes
 from soundboard.exceptions import ControllerException
 from soundboard.types import states_tuple
+from typing import Set
+
 
 logger = logging.getLogger("soundboard.controls")
 
@@ -54,12 +56,14 @@ class ControlHandler:
     def poll_raw(self):
         return list(chain.from_iterable(c.poll_raw() for c in self.controllers))
 
-    def poll_buffered(self, buffer_time):
-        pushed = set()
-        released = set()
+    def poll_buffered(self, buffer_time: float) -> states_tuple:
+        pushed: Set[int] = set()
+        released: Set[int] = set()
         break_on = 0
 
-        for i in range(int(buffer_time / 0.01)):
+        rounds = max(int(buffer_time / 0.01), 1)
+
+        for i in range(rounds):
             time.sleep(0.01)
             events = self.poll_raw()
             if not any([events, pushed, released]):

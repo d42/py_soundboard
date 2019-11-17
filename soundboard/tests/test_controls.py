@@ -1,25 +1,12 @@
 import pytest
 
+from queue import Queue
 from soundboard.controls import ControlHandler
 from soundboard.controls import Joystick
 from soundboard.enums import EventTypes
 from soundboard.types import event_tuple
-from soundboard.types import states_tuple
 
 joystick_plugged_in = pytest.mark.joystick_plugged_in
-
-
-class StubJoystick:
-    def __init__(self, device_path, mapping=None, offset=0):
-        pass
-
-    def wait(self):
-        return True
-
-    def get_events(self):
-        e1 = event_tuple(4, EventTypes.push)
-        e2 = event_tuple(4, EventTypes.release)
-        return [e1, e2]
 
 
 @joystick_plugged_in
@@ -35,11 +22,14 @@ def test_evdev():
 
 
 def test_controls():
-    j = Joystick(None, backend=StubJoystick)
-    e1 = event_tuple(123, EventTypes.push)
-    e2 = event_tuple(123, EventTypes.release)
-    e3 = event_tuple(100, EventTypes.push)
-    state = frozenset([123]), frozenset(), frozenset([100])
+    evt_queue = Queue()
+    j = Joystick(evt_queue, backend='queue')
+    evt_queue.put(event_tuple(123, EventTypes.push))
+    evt_queue.put(event_tuple(123, EventTypes.release))
+    evt_queue.put(event_tuple(100, EventTypes.push))
     ch = ControlHandler()
-
-    assert ch.postprocess([e1, e2, e2, e3]) == states_tuple(*state)
+    ch.register_controler(j)
+    states_tuple = ch.poll_buffered(0)
+    assert states_tuple.pushed == frozenset([123])
+    assert states_tuple.released == frozenset([])
+    assert states_tuple.held == frozenset([100])
