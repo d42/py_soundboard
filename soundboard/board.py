@@ -6,6 +6,7 @@ from .enums import ModifierTypes
 from .mixer import SDLMixer
 from .sounds import SoundFactory
 from .sounds import SoundSet
+from .types import states_tuple
 
 logger = logging.getLogger("soundboard.board")
 
@@ -65,15 +66,15 @@ class Board:
         if ModifierTypes.http in sound_set.modifiers:
             self.register_on_http(sound_set, sound_set.name)
 
-    def register_on_http(self, sound_set, endpoint):
+    def register_on_http(self, sound_set: SoundSet, endpoint: str):
         self.shared_online[endpoint] = sound_set
 
-    def register_on_keys(self, sound_set, keys):
+    def register_on_keys(self, sound_set: SoundSet, keys: list):
         if keys in self.combinations:
             raise ValueError("combo %s is occupied" % list(keys))
         self.combinations[frozenset(keys)] = sound_set
 
-    def on_buttons(self, buttons):
+    def on_buttons(self, buttons: states_tuple):
         """:type buttons: states_tuple"""
         logger.debug(buttons)
         pushed, held, released = buttons.pushed, buttons.held, buttons.released
@@ -101,7 +102,7 @@ class Board:
         except Exception as e:
             logger.exception(e)
 
-    def finish_sounds(self, released):
+    def finish_sounds(self, released: frozenset):
         for sound_set in self.combinations.values():
             sound_set.stop(released)
 
