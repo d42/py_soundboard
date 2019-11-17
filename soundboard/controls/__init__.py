@@ -1,1 +1,1 @@
-from .controls import *
+from .controls import *  # noqa F401
