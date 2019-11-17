@@ -1,1 +1,2 @@
 DEFAULT_HANDLER = "evdev"
+EVDEV_GRAB = False

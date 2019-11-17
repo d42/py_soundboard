@@ -8,6 +8,7 @@ from soundboard.enums import EventTypes
 from soundboard.exceptions import ControllerException
 from soundboard.types import event_tuple
 from soundboard.utils import init_sdl
+from ..defines import EVDEV_GRAB
 
 logger = logging.getLogger("soundboard.controls.raw")
 
@@ -135,7 +136,8 @@ class RawEVDEVJoystick(BaseRawJoystick):
         func = self.device_from_name if is_name else evdev.InputDevice
         try:
             self.joystick = func(device_path)
-            self.joystick.grab()
+            if EVDEV_GRAB:
+                self.joystick.grab()
         except Exception as e:
             logger.warning(e)
 
