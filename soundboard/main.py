@@ -10,9 +10,17 @@ from soundboard.board import Board
 from soundboard.config import settings
 from soundboard.controls import Joystick
 from soundboard.http import HTTPThread
+from soundboard.signals import mqtt_message
 
 
 logger = logging.getLogger("soundboard.main")
+
+
+def setup_signals(board: Board):
+    @mqtt_message.connect
+    def on_mqtt_message(sender, topic, message):
+        logger.info('mqtt message')
+        board.mqtt_send(topic, message)
 
 
 def main():

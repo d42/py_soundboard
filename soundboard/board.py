@@ -21,7 +21,6 @@ class Board:
         self.sound_factory = SoundFactory(
             mixer=self.mixer,
             directory=settings["wav_directory"],
-            mqtt_callback=self.mqtt_send,
         )
         self._dankness = False
 

@@ -21,6 +21,7 @@ from .exceptions import VoxException
 from .mixer import SDLMixer
 from .types import sound_state
 from .vox import voxify
+from .signals import mqtt_message
 
 logger = logging.getLogger("soundboard.sounds")
 
@@ -34,21 +35,17 @@ class SoundFactory:
         directory,
         state=config.state,
         settings=config.settings,
-        mqtt_callback=None,
     ):
         # https://stackoverflow.com/questions/529240/what-happened-to-types-classtype-in-python-3
         self.mixer = mixer() if isinstance(mixer, type) else mixer
         self.settings = settings
         self.state = state
         self.directory = directory
-        self.mqtt_callback = mqtt_callback
 
     def by_name(self, name):
         ":rtype: Sound"
         cls = self.state.sounds.by_name(name)
-        instance = cls(
-            mixer=self.mixer, base_dir=self.directory, mqtt_callback=self.mqtt_callback,
-        )
+        instance = cls(mixer=self.mixer, base_dir=self.directory)
         instance.settings = self.settings  # TODO: unuglify
         return instance
 
@@ -58,7 +55,6 @@ class SoundFactory:
             directory=wav_directory,
             state=self.state,
             settings=self.settings,
-            mqtt_callback=self.mqtt_callback,
         )
 
     def __getattr__(self, attr):
@@ -98,13 +94,12 @@ class SoundInterface(metaclass=SoundMeta):
 class Sound(SoundInterface):
     running = False
 
-    def __init__(self, mixer: SDLMixer, base_dir, data=None, mqtt_callback=None):
+    def __init__(self, mixer: SDLMixer, base_dir, data=None):
         self.mixer = mixer
         self.dir = base_dir
         self.name = "I'm so unnammed"
         self.current_sample = None
         self.duration_const = 0
-        self.mqtt_callback = mqtt_callback
 
         if data:
             self.setup(data)
@@ -407,7 +402,7 @@ class MQTT(Sound):
     def play(self):
         message = self.message_off if self.state else self.message_on
         self.state = False if self.state else True
-        self.mqtt_callback(self.topic, message)
+        mqtt_message.send(self, topic=self.topic, message=message)
 
 
 @config.state.sounds.register
