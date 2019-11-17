@@ -26,7 +26,7 @@ class Joystick:
     def open_joystick(joystick_id, backend, mapping, offset):
         backend = HANDLERS.get(backend)
         if not backend:
-            ControllerException("unknown type %s" % backend)
+            raise ControllerException("unknown type %s" % backend)
         return backend(joystick_id, mapping=mapping, offset=offset)
 
     def poll_raw(self):
