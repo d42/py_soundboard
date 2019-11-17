@@ -232,7 +232,6 @@ class VoxSound(Sound):
 @config.state.sounds.register
 class WeatherSound(Sound):
     name = "weather"
-    location_id = "warsaw,pl"
     sentence = "topside temperature is %s degrees"
     below_zero = "sub zero"
     temperature = 2137
