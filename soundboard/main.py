@@ -1,8 +1,8 @@
-import glob
 import logging
 import os
 import sys
 from queue import Queue
+from pathlib import Path
 
 from prometheus_client import start_http_server
 
@@ -10,11 +10,6 @@ from soundboard.board import Board
 from soundboard.config import settings
 from soundboard.controls import Joystick
 from soundboard.http import HTTPThread
-
-
-def get_files(directory, extension):
-    glob_path = os.path.join(directory, "*.%s" % extension)
-    return glob.glob(glob_path)
 
 
 logger = logging.getLogger("soundboard.main")
@@ -33,7 +28,7 @@ def main():
     b = Board(settings)
     http = HTTPThread(b, settings)
     http.start()
-    for file in get_files(settings.yaml_directory, "yaml"):
+    for file in Path(settings.yaml_directory).glob("*.yaml"):
         b.register_sound_set(yamlfile=file)
 
     if b.settings.device_path:
