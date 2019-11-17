@@ -48,10 +48,3 @@ def test_sounds(monkeypatch, factory):
     au = ApiManager()
     au.update()
     # assert weather.temperature == 21.37
-
-
-# def test_transport_humanize():
-#     assert sounds.ZTMSound._line_humanize('13') == 'topside train number 13'
-#     assert sounds.ZTMSound._line_humanize('M3') == 'subsurface train'
-#     assert sounds.ZTMSound._line_humanize('123') == 'day bust number 123'
-#     assert sounds.ZTMSound._line_humanize('S2') == 'transportation'
