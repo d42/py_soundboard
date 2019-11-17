@@ -3,10 +3,12 @@ import time
 from itertools import chain
 
 from .raw_controls import HANDLERS
+from .raw_controls import BaseRawJoystick
 from soundboard.enums import EventTypes
 from soundboard.exceptions import ControllerException
 from soundboard.types import states_tuple
-from typing import Set
+from typing import Any, List, Set
+from ..defines import DEFAULT_HANDLER
 
 
 logger = logging.getLogger("soundboard.controls")
@@ -16,20 +18,25 @@ class Joystick:
     callback = None
 
     def __init__(
-        self, joystick_id, backend="evdev", buffer_msec=25, mapping=None, offset=0,
+            self,
+            joystick_source: Any,
+            backend: str = DEFAULT_HANDLER,
+            buffer_msec: int = 25,
+            mapping: dict = None,
+            offset: int = 0,
     ):
 
-        self.raw_joystick = self.open_joystick(joystick_id, backend, mapping, offset)
+        self.raw_joystick = self.open_joystick(joystick_source, backend, mapping, offset)
 
-        self.held = set()
-        self.released = set()
+        self.held: Set[int] = set()
+        self.released: Set[int] = set()
 
     @staticmethod
-    def open_joystick(joystick_id, backend, mapping, offset):
-        backend = HANDLERS.get(backend)
-        if not backend:
+    def open_joystick(joystick_source, backend, mapping, offset):
+        backend_handler = HANDLERS.get(backend)
+        if not backend_handler:
             raise ControllerException("unknown type %s" % backend)
-        return backend(joystick_id, mapping=mapping, offset=offset)
+        return backend_handler(joystick_source, mapping=mapping, offset=offset)
 
     def poll_raw(self):
         self.raw_joystick.update()
@@ -42,7 +49,7 @@ class Joystick:
 
 class ControlHandler:
     def __init__(self):
-        self.controllers = []
+        self.controllers: List[BaseRawJoystick] = []
         self.held = set()
         self.released = set()
 
