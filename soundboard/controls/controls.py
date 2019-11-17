@@ -92,7 +92,7 @@ class ControlHandler:
         released_now = self.released - pushed
         self.released -= released_now
 
-        return states_tuple(*map(frozenset, [clicks, released_now, self.held]))
+        return states_tuple(*[frozenset(f) for f in [clicks, released_now, self.held]])
 
     @staticmethod
     def to_states_sets(events):
