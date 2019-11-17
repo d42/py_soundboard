@@ -4,7 +4,6 @@ from .client_api import ApiManager
 from .controls import ControlHandler
 from .enums import ModifierTypes
 from .mixer import SDLMixer
-from .mqtt import MQTT
 from .sounds import SoundFactory
 from .sounds import SoundSet
 
@@ -31,24 +30,10 @@ class Board:
         self.running = False
         self.active_sound_set = None
         self.board_state = {"allow_dank_memes": False}
-        if self.settings.mqtt:
-            self._setup_mqtt()
 
-    def _setup_mqtt(self):
-        def mqtt_dankness(topic, payload):
-            allow = {b"safe": False, b"engaged": True}[payload]
-            self.dankness = allow
-
-        self.mqtt_client = MQTT(
-            path=self.settings.mqtt_path,
-            login=self.settings.mqtt_login,
-            password=self.settings.mqtt_password,
-        )
-
-        self.mqtt_client.add_topic_handler("hswaw/dank/state", mqtt_dankness)
-
-    def mqtt_send(self, topic, message):
-        self.mqtt_client.send(topic, message)
+    def on_dankness(self, topic, payload):
+        allow = {b"safe": False, b"engaged": True}[payload]
+        self.dankness = allow
 
     @property
     def dankness(self):

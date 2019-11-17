@@ -9,6 +9,8 @@ from soundboard.exceptions import ControllerException
 from soundboard.types import event_tuple
 from soundboard.utils import init_sdl
 from ..defines import EVDEV_GRAB
+from typing import Tuple
+from queue import Queue
 
 logger = logging.getLogger("soundboard.controls.raw")
 
@@ -60,7 +62,7 @@ class RawQueueJoystick(BaseRawJoystick):
     def __init__(self, queue, mapping=None, offset=0):
         """:type queue: Queue.Queue"""
         super().__init__(mapping, offset)
-        self.queue = queue
+        self.queue: Queue[Tuple[int, int]] = queue
         self.keys_held = dict()
         self.last_key_at = 0
 
