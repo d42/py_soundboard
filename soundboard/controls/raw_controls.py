@@ -16,8 +16,7 @@ logger = logging.getLogger("soundboard.controls.raw")
 
 
 class BaseRawJoystick:
-    def __init__(self, mapping=None, offset=0):
-        self.mapping = mapping if mapping else dict()
+    def __init__(self, offset=0):
         self.scancode_offset = offset
         self.events = list()
 
@@ -48,20 +47,15 @@ class BaseRawJoystick:
             logger.debug("shift %d -> %d", button, new_button)
             return new_button
 
-        def remap(button):
-            new_button = self.mapping.get(button, button)
-            logger.debug("remap %d -> %d", button, new_button)
-            return new_button
-
         button, type = event
-        new_button = remap(shift(button))
+        new_button = shift(button)
         return event_tuple(new_button, type)
 
 
 class RawQueueJoystick(BaseRawJoystick):
-    def __init__(self, queue, mapping=None, offset=0):
+    def __init__(self, queue, offset=0):
         """:type queue: Queue.Queue"""
-        super().__init__(mapping, offset)
+        super().__init__(offset)
         self.queue: Queue[Tuple[int, int]] = queue
         self.keys_held = dict()
         self.last_key_at = 0
@@ -98,8 +92,8 @@ class RawSDLJoystick(BaseRawJoystick):
     def JOYSTICK_EVENTS(self):
         return (sdl2.SDL_JOYBUTTONUP, sdl2.SDL_JOYBUTTONDOWN)
 
-    def __init__(self, joystick_id, mapping=None, offset=0):
-        super().__init__(mapping, offset)
+    def __init__(self, joystick_id, offset=0):
+        super().__init__(offset)
         init_sdl()
         self.joystick = self.open_joystick(joystick_id)
 
@@ -128,8 +122,8 @@ class RawEVDEVJoystick(BaseRawJoystick):
     def JOYSTICK_EVENTS(self):
         return [evdev.ecodes.EV_KEY]  # noqa
 
-    def __init__(self, device_path, mapping=None, offset=0):
-        super().__init__(mapping, offset)
+    def __init__(self, device_path, offset=0):
+        super().__init__(offset)
         self.device_path = device_path
         self.setup_device(self.device_path)
 

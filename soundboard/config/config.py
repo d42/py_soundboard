@@ -14,12 +14,6 @@ logger = logging.getLogger("soundboard.config")
 
 
 class Settings(Argumentize):
-
-    physical_mapping = {
-        k: i for (i, k) in enumerate([8, 7, 6, 5, 1, 2, 3, 4, 9, 10, 11, 0])
-    }
-    buttons_count = len(physical_mapping)
-
     wav_directory = OptionStr(required=True, fmt=os.path.expanduser)
     yaml_directory = OptionStr(required=True, fmt=os.path.expanduser)
     debug = OptionBool(False)

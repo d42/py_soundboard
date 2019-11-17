@@ -66,7 +66,6 @@ def main():
         joystick = Joystick(
             settings.device_path,
             backend=settings.input_type,
-            mapping=settings.physical_mapping,
             offset=settings.scancode_offset,
         )
 

@@ -22,21 +22,20 @@ class Joystick:
             joystick_source: Any,
             backend: str = DEFAULT_HANDLER,
             buffer_msec: int = 25,
-            mapping: dict = None,
             offset: int = 0,
     ):
 
-        self.raw_joystick = self.open_joystick(joystick_source, backend, mapping, offset)
+        self.raw_joystick = self.open_joystick(joystick_source, backend, offset)
 
         self.held: Set[int] = set()
         self.released: Set[int] = set()
 
     @staticmethod
-    def open_joystick(joystick_source, backend, mapping, offset):
+    def open_joystick(joystick_source, backend, offset):
         backend_handler = HANDLERS.get(backend)
         if not backend_handler:
             raise ControllerException("unknown type %s" % backend)
-        return backend_handler(joystick_source, mapping=mapping, offset=offset)
+        return backend_handler(joystick_source, offset=offset)
 
     def poll_raw(self):
         self.raw_joystick.update()
