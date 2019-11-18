@@ -13,6 +13,7 @@ from soundboard.controls import Joystick
 from soundboard.http import HTTPThread
 from soundboard.signals import mqtt_message
 from soundboard.mqtt import MQTT
+from soundboard.defines import MQTT_TOPIC_CONTROLLER, MQTT_TOPIC_DANK
 from typing import Tuple
 
 
@@ -37,7 +38,7 @@ def setup_mqtt_controller(board: Board, mqtt: MQTT):
         mqtt_queue.put(joystick_data)
 
     board.register_joystick(mqtt_joystick)
-    mqtt.add_topic_handler("hswaw/soundboard/state", joystick_cb)
+    mqtt.add_topic_handler(MQTT_TOPIC_CONTROLLER, joystick_cb)
 
 
 def setup_http(board: Board):
@@ -79,7 +80,7 @@ def main():
             login=settings.mqtt_login,
             password=settings.mqtt_password,
         )
-        mqtt.add_topic_handler("hswaw/dank/state", board.on_dankness)
+        mqtt.add_topic_handler(MQTT_TOPIC_DANK, board.on_dankness)
         setup_mqtt_controller(board, mqtt)
     board.run()
 
