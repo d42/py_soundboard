@@ -5,3 +5,4 @@ mqtt: false
 prometheus: false
 device_path: /dev/input/event19
 scancode_offset: 0
+openweather_api_key: example

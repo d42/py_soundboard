@@ -22,6 +22,7 @@ from .mixer import SDLMixer
 from .types import sound_state
 from .vox import voxify
 from .signals import mqtt_message
+from .defines import WEATHER_URL
 
 logger = logging.getLogger("soundboard.sounds")
 
@@ -237,16 +238,14 @@ class WeatherSound(Sound):
     temperature = 2137
 
     def setup(self, location_id, weather_url=None, interval=None):
-        weather_url = weather_url or self.settings.weather_url
         interval = interval or self.settings.weather_interval
-
-        self.location_id = location_id
+        api_key = self.settings.openweather_api_key
 
         self.api = JSONApi(
-            weather_url,
+            WEATHER_URL,
             id=location_id,
             units="metric",
-            appid="44db6a862fba0b067b1930da0d769e98",
+            appid=api_key,
             _interval=interval,
         )
 
