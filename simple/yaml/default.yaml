@@ -25,6 +25,11 @@ sounds:
       path: default/oof.wav
       is_async: True
 
+    - name: weather
+      keys: [3]
+      type: weather
+      location_id: 2172797
+
     - name: light
       keys: [4, 7]
       type: mqtt
