@@ -1,0 +1,31 @@
+syntax = "proto3";
+package soundboard;
+
+service Soundboard {
+    rpc Index(IndexRequest) returns (IndexResponse);
+    rpc GetSounds(GetSoundsRequest) returns (GetSoundsResponse);
+    rpc Play(PlayRequest) returns (PlayResponse);
+}
+
+message IndexRequest {
+}
+
+message IndexResponse {
+    repeated string sound_sets = 1;
+}
+
+message GetSoundsRequest {
+    string set_name = 1;
+}
+
+message GetSoundsResponse {
+    repeated string sounds = 1;
+}
+
+message PlayRequest {
+    string set_name = 1;
+    string sound_name = 2;
+}
+
+message PlayResponse {
+}

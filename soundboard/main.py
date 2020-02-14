@@ -5,6 +5,12 @@ import sys
 from queue import Queue
 from pathlib import Path
 
+import grpc
+from grpc_reflection.v1alpha import reflection
+from concurrent import futures
+import proto_pb2
+import proto_pb2_grpc
+
 from prometheus_client import start_http_server
 
 from soundboard.board import Board
@@ -46,6 +52,29 @@ def setup_http(board: Board):
     http.start()
 
 
+class SoundboardServicer(proto_pb2_grpc.SoundboardServicer):
+
+    def __init__(self, board: Board):
+        self.board = board
+
+    def Index(self, request, context):
+        r = proto_pb2.IndexResponse()
+        r.sound_sets.extend(self.board.shared_online)
+        return r
+
+    def GetSounds(self, request, context):
+        r = proto_pb2.GetSoundsResponse()
+        sound_set = self.board.shared_online.get(request.set_name)
+        r.sounds.extend(s.name for s in sound_set.sounds.values())
+        return r
+
+    def Play(self, request, context):
+        sound_set = self.board.shared_online.get(request.set_name)
+        sound = sound_set.sounds[request.sound_name]
+        sound.play(is_async=True)
+        return proto_pb2.PlayResponse()
+
+
 def main():
     os.environ["SDL_VIDEODRIVER"] = "dummy"
     if "--debug" in sys.argv:
@@ -73,6 +102,19 @@ def main():
         board.register_joystick(joystick)
     else:
         logger.warning("no hardware soundboard")
+
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    proto_pb2_grpc.add_SoundboardServicer_to_server(
+        SoundboardServicer(board), server,
+    )
+    reflection.enable_server_reflection(
+        (
+            "soundboard.Soundboard",
+            reflection.SERVICE_NAME,
+        ), server,
+    )
+    server.add_insecure_port('[::]:50051')
+    server.start()
 
     if settings.mqtt:
         mqtt = MQTT(
